@@ -42,7 +42,8 @@ export default function Rfs() {
   const orderId = urlParams.get("orderId");
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("health");
+  const tabParam = urlParams.get("tab");
+  const [activeTab, setActiveTab] = useState(tabParam || "health");
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
   const [pageFilters, setPageFilters] = React.useState({});
   const [replanNeeded, setReplanNeeded] = React.useState(false);
