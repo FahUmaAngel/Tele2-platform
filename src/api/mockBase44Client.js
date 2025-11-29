@@ -34,12 +34,30 @@ const processEntityData = (data, jsonFields = []) => {
 
 // In-memory store to simulate database
 const store = {
-    FiberOrder: processEntityData(parseCsv(fiberOrderCsv), []).map(item => ({
-        ...item,
-        lat: item.lat ? parseFloat(item.lat) : null,
-        lng: item.lng ? parseFloat(item.lng) : null,
-        priority: item.priority ? parseInt(item.priority, 10) : 3
-    })),
+    FiberOrder: processEntityData(parseCsv(fiberOrderCsv), []).map(item => {
+        // Mock specific alert data for demonstration
+        let access_status = item.access_status;
+        let rfs_status = item.rfs_status;
+
+        // Problem 3: Technician can't reach customer (Mock for SITE-SE-03)
+        if (item.facility_id === 'SITE-SE-03') {
+            access_status = 'No Access';
+        }
+
+        // Problem 4: Client hasn't approved the job (Mock for SITE-SE-04)
+        if (item.facility_id === 'SITE-SE-04') {
+            rfs_status = 'pending_approval';
+        }
+
+        return {
+            ...item,
+            lat: item.lat ? parseFloat(item.lat) : null,
+            lng: item.lng ? parseFloat(item.lng) : null,
+            priority: item.priority ? parseInt(item.priority, 10) : 3,
+            access_status,
+            rfs_status
+        };
+    }),
     NetworkDesign: processEntityData(parseCsv(networkDesignCsv), [
         'hardware_specs',
         'pricing',
