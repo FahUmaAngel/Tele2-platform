@@ -2,19 +2,124 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Clock, FileWarning, Eye } from 'lucide-react';
+import { AlertTriangle, Clock, FileWarning, Eye, Loader2 } from 'lucide-react';
+import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
+import { Link, useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { formatDistanceToNow } from 'date-fns';
 
 export default function AlertsPanel() {
-  const alerts = [
-    { id: 1, title: "Fiber Delivery Delayed", site: "SITE-ST-402", type: "delay", severity: "high", date: "2h ago" },
-    { id: 2, title: "Frost Constraint Conflict", site: "SITE-NO-88", type: "schedule", severity: "medium", date: "4h ago" },
-    { id: 3, title: "Missing Site Photos", site: "SITE-VX-12", type: "doc", severity: "low", date: "5h ago" },
-    { id: 4, title: "Installation Failed QC", site: "SITE-ST-105", type: "quality", severity: "high", date: "1d ago" },
-    { id: 5, title: "Subcontractor Capacity", site: "Region North", type: "resource", severity: "medium", date: "1d ago" },
-  ];
+  const navigate = useNavigate();
+
+  // Fetch FiberOrder data
+  const { data: orders, isLoading } = useQuery({
+    queryKey: ['fiber-orders-alerts'],
+    queryFn: () => base44.entities.FiberOrder.list(),
+    refetchInterval: 30000 // Refresh every 30 seconds
+  });
+
+  // Detect alerts from orders
+  const detectAlerts = (orders) => {
+    if (!orders) return [];
+
+    const alerts = [];
+
+    orders.forEach(order => {
+      // Fiber Delivery Delayed - check for "Delayed" status or "Delayed" delay_risk
+      if (order.status === 'Delayed' || order.delay_risk === 'Delayed') {
+        alerts.push({
+          id: `delay-${order.facility_id}`,
+          title: "Fiber Delivery Delayed",
+          facility_id: order.facility_id,
+          type: "delay",
+          severity: "high",
+          timestamp: order.updated_date,
+          order
+        });
+      }
+
+      // Frost Constraint Conflict - check frost_constraint field
+      if (order.frost_constraint && order.frost_constraint !== 'None') {
+        alerts.push({
+          id: `frost-${order.facility_id}`,
+          title: "Frost Constraint Conflict",
+          facility_id: order.facility_id,
+          type: "schedule",
+          severity: "medium",
+          timestamp: order.updated_date,
+          order
+        });
+      }
+
+      // Missing Site Photos - check geocoding_status
+      if (order.geocoding_status === 'failed' || order.geocoding_status === 'pending') {
+        alerts.push({
+          id: `photos-${order.facility_id}`,
+          title: "Missing Site Photos",
+          facility_id: order.facility_id,
+          type: "doc",
+          severity: "low",
+          timestamp: order.updated_date,
+          order
+        });
+      }
+
+      // Installation Failed QC - check for "Blocked" status
+      if (order.status === 'Blocked') {
+        alerts.push({
+          id: `qc-${order.facility_id}`,
+          title: "Installation Failed QC",
+          facility_id: order.facility_id,
+          type: "quality",
+          severity: "high",
+          timestamp: order.updated_date,
+          order
+        });
+      }
+
+      // Subcontractor Capacity - check for "At risk" delay_risk
+      if (order.delay_risk === 'At risk') {
+        alerts.push({
+          id: `capacity-${order.facility_id}`,
+          title: "Subcontractor Capacity",
+          facility_id: order.facility_id,
+          type: "resource",
+          severity: "medium",
+          timestamp: order.updated_date,
+          order
+        });
+      }
+    });
+
+    // Sort by most recent first
+    return alerts.sort((a, b) =>
+      new Date(b.timestamp) - new Date(a.timestamp)
+    );
+  };
+
+  const alerts = detectAlerts(orders);
+
+  // Calculate time duration
+  const getTimeDuration = (timestamp) => {
+    if (!timestamp) return 'N/A';
+    try {
+      return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
+    } catch {
+      return 'N/A';
+    }
+  };
+
+  // Navigate to specific site
+  const handleViewSite = (facilityId) => {
+    navigate(`${createPageUrl('FiberOrdering')}?siteId=${facilityId}`);
+  };
+
+  // Get all alert facility IDs for filtering
+  const alertFacilityIds = [...new Set(alerts.map(a => a.facility_id))].join(',');
 
   const getIcon = (type) => {
-    switch(type) {
+    switch (type) {
       case 'delay': return <Clock className="w-4 h-4" />;
       case 'doc': return <FileWarning className="w-4 h-4" />;
       default: return <AlertTriangle className="w-4 h-4" />;
@@ -22,12 +127,28 @@ export default function AlertsPanel() {
   };
 
   const getColor = (severity) => {
-    switch(severity) {
+    switch (severity) {
       case 'high': return "text-red-600 bg-red-50 border-red-100";
       case 'medium': return "text-amber-600 bg-amber-50 border-amber-100";
       default: return "text-blue-600 bg-blue-50 border-blue-100";
     }
   };
+
+  if (isLoading) {
+    return (
+      <Card className="shadow-sm h-full">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-red-500" />
+            Alerts & Risks
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-48">
+          <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="shadow-sm h-full">
@@ -37,35 +158,53 @@ export default function AlertsPanel() {
             <AlertTriangle className="w-5 h-5 text-red-500" />
             Alerts & Risks
           </CardTitle>
-          <Badge variant="destructive" className="rounded-full">5 New</Badge>
+          <Badge variant="destructive" className="rounded-full">{alerts.length} New</Badge>
         </div>
       </CardHeader>
       <CardContent className="p-0">
         <div className="divide-y divide-gray-100">
-          {alerts.map((alert) => (
-            <div key={alert.id} className="p-4 hover:bg-gray-50 transition-colors flex items-center justify-between group">
-              <div className="flex items-start gap-3">
-                <div className={`p-2 rounded-lg border ${getColor(alert.severity)}`}>
-                  {getIcon(alert.type)}
-                </div>
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-900">{alert.title}</h4>
-                  <p className="text-xs text-gray-500 flex items-center gap-2">
-                    <span className="font-mono">{alert.site}</span>
-                    <span>•</span>
-                    <span>{alert.date}</span>
-                  </p>
-                </div>
-              </div>
-              <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8">
-                <Eye className="w-4 h-4 text-gray-500" />
-              </Button>
+          {alerts.length === 0 ? (
+            <div className="p-8 text-center text-gray-400 text-sm">
+              No alerts at this time
             </div>
-          ))}
+          ) : (
+            alerts.slice(0, 5).map((alert) => (
+              <div key={alert.id} className="p-4 hover:bg-gray-50 transition-colors flex items-center justify-between group">
+                <div className="flex items-start gap-3">
+                  <div className={`p-2 rounded-lg border ${getColor(alert.severity)}`}>
+                    {getIcon(alert.type)}
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-900">{alert.title}</h4>
+                    <p className="text-xs text-gray-500 flex items-center gap-2">
+                      <span className="font-mono">{alert.facility_id}</span>
+                      <span>•</span>
+                      <span>{getTimeDuration(alert.timestamp)}</span>
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8"
+                  onClick={() => handleViewSite(alert.facility_id)}
+                  title={`View ${alert.facility_id}`}
+                >
+                  <Eye className="w-4 h-4 text-gray-500" />
+                </Button>
+              </div>
+            ))
+          )}
         </div>
-        <div className="p-3 border-t border-gray-100 text-center">
-          <Button variant="ghost" size="sm" className="text-xs w-full text-gray-500">View All Alerts</Button>
-        </div>
+        {alerts.length > 0 && (
+          <div className="p-3 border-t border-gray-100 text-center">
+            <Link to={`${createPageUrl('SiteOverview')}?alerts=${alertFacilityIds}`}>
+              <Button variant="ghost" size="sm" className="text-xs w-full text-gray-500">
+                View All Alerts
+              </Button>
+            </Link>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

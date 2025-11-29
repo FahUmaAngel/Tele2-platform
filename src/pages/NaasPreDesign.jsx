@@ -12,6 +12,7 @@ import PreDesignWorkflow from "@/components/naas/PreDesignWorkflow";
 import PreDesignForm from "@/components/naas/PreDesignForm";
 import DraftDesignPreview from "@/components/naas/DraftDesignPreview";
 import PageFilter from '@/components/shared/PageFilter';
+import ReplanButton from '@/components/ReplanButton';
 
 export default function NaasPreDesign() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -19,37 +20,43 @@ export default function NaasPreDesign() {
   const orderIdParam = urlParams.get("orderId");
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  
+
   const [generatedDraft, setGeneratedDraft] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [replanNeeded, setReplanNeeded] = useState(false);
+
+  // Mock logic for replanNeeded - in real app, check status or dates
+  useEffect(() => {
+    // Example: setReplanNeeded(true) if status is 'Delayed'
+  }, []);
   const [pageFilters, setPageFilters] = useState({});
 
   // Sync page filters when facility_id or order_id is selected
   useEffect(() => {
-      const fid = pageFilters.facility_id;
-      const oid = pageFilters.order_id;
-      
-      let nextUrl = createPageUrl('NaasPreDesign');
-      let params = new URLSearchParams();
-      let hasChanges = false;
+    const fid = pageFilters.facility_id;
+    const oid = pageFilters.order_id;
 
-      if (fid && fid !== 'all') {
-          params.set('siteId', fid);
-          if (fid !== siteId) hasChanges = true;
-      } else {
-          params.set('siteId', siteId);
-      }
+    let nextUrl = createPageUrl('NaasPreDesign');
+    let params = new URLSearchParams();
+    let hasChanges = false;
 
-      if (oid && oid !== 'all') {
-          params.set('orderId', oid);
-          if (oid !== orderIdParam) hasChanges = true;
-      } else if (orderIdParam) {
-          params.set('orderId', orderIdParam);
-      }
+    if (fid && fid !== 'all') {
+      params.set('siteId', fid);
+      if (fid !== siteId) hasChanges = true;
+    } else {
+      params.set('siteId', siteId);
+    }
 
-      if (hasChanges) {
-          navigate(`${nextUrl}?${params.toString()}`);
-      }
+    if (oid && oid !== 'all') {
+      params.set('orderId', oid);
+      if (oid !== orderIdParam) hasChanges = true;
+    } else if (orderIdParam) {
+      params.set('orderId', orderIdParam);
+    }
+
+    if (hasChanges) {
+      navigate(`${nextUrl}?${params.toString()}`);
+    }
   }, [pageFilters, siteId, orderIdParam, navigate]);
 
   // 1. Fetch Data
@@ -78,9 +85,9 @@ export default function NaasPreDesign() {
     mutationFn: async (data) => {
       // Ensure order_id is synced from fiberOrder if available
       const payload = {
-          ...data,
-          facility_id: siteId,
-          order_id: fiberOrder?.order_id || data.order_id
+        ...data,
+        facility_id: siteId,
+        order_id: fiberOrder?.order_id || data.order_id
       };
 
       if (preDesign?.id) {
@@ -100,16 +107,16 @@ export default function NaasPreDesign() {
     // Simulate AI Delay
     setTimeout(() => {
       const mockBOM = params.site_category === 'Small' ? [
-         { name: "Cisco Meraki MX68", qty: 1, cost: 8500 },
-         { name: "Cisco Meraki MR44 WiFi 6", qty: 2, cost: 4200 }
+        { name: "Cisco Meraki MX68", qty: 1, cost: 8500 },
+        { name: "Cisco Meraki MR44 WiFi 6", qty: 2, cost: 4200 }
       ] : params.site_category === 'Medium' ? [
-         { name: "Cisco Catalyst 9200L 24P", qty: 1, cost: 15000 },
-         { name: "Cisco Catalyst 9115AX AP", qty: 4, cost: 3500 },
-         { name: "UPS 1500VA", qty: 1, cost: 2500 }
+        { name: "Cisco Catalyst 9200L 24P", qty: 1, cost: 15000 },
+        { name: "Cisco Catalyst 9115AX AP", qty: 4, cost: 3500 },
+        { name: "UPS 1500VA", qty: 1, cost: 2500 }
       ] : [
-         { name: "Cisco Catalyst 9300 48P", qty: 2, cost: 35000 },
-         { name: "Cisco Catalyst 9120AX AP", qty: 12, cost: 4200 },
-         { name: "Fiber Uplink Module 10G", qty: 2, cost: 8000 }
+        { name: "Cisco Catalyst 9300 48P", qty: 2, cost: 35000 },
+        { name: "Cisco Catalyst 9120AX AP", qty: 12, cost: 4200 },
+        { name: "Fiber Uplink Module 10G", qty: 2, cost: 8000 }
       ];
 
       setGeneratedDraft({
@@ -141,37 +148,46 @@ export default function NaasPreDesign() {
           <ChevronRight className="w-4 h-4" />
           <Link to={createPageUrl('FiberOrdering') + `?siteId=${siteId}`} className="hover:text-blue-600 transition-colors">{siteId}</Link>
           {(preDesign?.order_id || orderIdParam || fiberOrder?.order_id) && (
-              <>
-                <ChevronRight className="w-4 h-4" />
-                <span className="font-medium text-gray-500">
-                    {preDesign?.order_id || orderIdParam || fiberOrder?.order_id}
-                </span>
-              </>
+            <>
+              <ChevronRight className="w-4 h-4" />
+              <span className="font-medium text-gray-500">
+                {preDesign?.order_id || orderIdParam || fiberOrder?.order_id}
+              </span>
+            </>
           )}
         </div>
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-             <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-bold text-gray-900 tracking-tight">NaaS Pre-Design</h1>
-                <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs font-semibold border border-blue-100">Step 2 of 7</span>
-             </div>
-             <p className="text-gray-500 mt-1">
-                Preliminary network design and feasibility assessment.
-             </p>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-gray-900 tracking-tight">NaaS Pre-Design</h1>
+              <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs font-semibold border border-blue-100">Step 2 of 7</span>
+            </div>
+            <p className="text-gray-500 mt-1">
+              Preliminary network design and feasibility assessment.
+            </p>
           </div>
 
           <div className="flex gap-3">
-             <Link to={createPageUrl('FiberOrdering') + `?siteId=${siteId}`}>
-                <Button variant="outline" className="bg-white">
-                   <ArrowLeft className="w-4 h-4 mr-2" /> Back to Fiber
-                </Button>
-             </Link>
-             <Link to={createPageUrl('SiteSurvey') + `?siteId=${siteId}`}>
-                <Button className="bg-[#0a1f33] hover:bg-[#153250]">
-                   Proceed to Survey <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-             </Link>
+            <ReplanButton
+              siteId={siteId}
+              orderId={orderIdParam}
+              currentStep={2}
+              variant={replanNeeded ? "destructive" : "outline"}
+              className={replanNeeded ? "animate-pulse shadow-md" : ""}
+            >
+              {replanNeeded ? "Replanning Required" : "AI Replan"}
+            </ReplanButton>
+            <Link to={createPageUrl('FiberOrdering') + `?siteId=${siteId}`}>
+              <Button variant="outline" className="bg-white">
+                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Fiber
+              </Button>
+            </Link>
+            <Link to={createPageUrl('SiteSurvey') + `?siteId=${siteId}`}>
+              <Button className="bg-[#0a1f33] hover:bg-[#153250]">
+                Proceed to Survey <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
@@ -181,33 +197,33 @@ export default function NaasPreDesign() {
 
       {/* Main Content */}
       <div className="grid lg:grid-cols-5 gap-8">
-         {/* Inputs (2 cols) */}
-         <div className="lg:col-span-2">
-            <PreDesignForm 
-              initialData={preDesign} 
-              fiberOrder={fiberOrder}
-              orderId={orderIdParam}
-              onSubmit={onSubmit} 
-              isGenerating={isGenerating}
-              onGenerateAI={handleGenerateAI}
-            />
-         </div>
+        {/* Inputs (2 cols) */}
+        <div className="lg:col-span-2">
+          <PreDesignForm
+            initialData={preDesign}
+            fiberOrder={fiberOrder}
+            orderId={orderIdParam}
+            onSubmit={onSubmit}
+            isGenerating={isGenerating}
+            onGenerateAI={handleGenerateAI}
+          />
+        </div>
 
-         {/* Outputs (3 cols) */}
-         <div className="lg:col-span-3">
-            <DraftDesignPreview design={generatedDraft} />
-         </div>
+        {/* Outputs (3 cols) */}
+        <div className="lg:col-span-3">
+          <DraftDesignPreview design={generatedDraft} />
+        </div>
       </div>
 
       {/* Fiber Status Context */}
       {fiberOrder && (
         <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 text-sm text-gray-600 flex justify-between items-center">
-           <div>
-              <strong>Fiber Status:</strong> {fiberOrder.status}
-           </div>
-           <div>
-              <strong>Est. Delivery:</strong> {fiberOrder.delivery_est_date || "Pending"}
-           </div>
+          <div>
+            <strong>Fiber Status:</strong> {fiberOrder.status}
+          </div>
+          <div>
+            <strong>Est. Delivery:</strong> {fiberOrder.delivery_est_date || "Pending"}
+          </div>
         </div>
       )}
 

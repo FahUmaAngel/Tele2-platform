@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -9,18 +9,26 @@ import { createPageUrl } from '@/utils';
 import SurveyCard from "@/components/site-survey/SurveyCard";
 import WorkflowTimeline from '@/components/shared/WorkflowTimeline';
 import PageFilter from '@/components/shared/PageFilter';
+import ReplanButton from '@/components/ReplanButton';
 
 export default function SiteSurvey() {
   const urlParams = new URLSearchParams(window.location.search);
   const siteId = urlParams.get("siteId") || "";
+  const [isNewSurveyOpen, setIsNewSurveyOpen] = useState(false);
+  const [replanNeeded, setReplanNeeded] = useState(false);
+
+  // Mock logic for replanNeeded
+  useEffect(() => {
+    // Logic to determine if replan is needed
+  }, []);
   const [pageFilters, setPageFilters] = React.useState({});
   const navigate = useNavigate();
 
   React.useEffect(() => {
-      const fid = pageFilters.facility_id;
-      if (fid && fid !== 'all' && fid !== siteId) {
-          navigate(`${createPageUrl('SiteSurvey')}?siteId=${fid}`);
-      }
+    const fid = pageFilters.facility_id;
+    if (fid && fid !== 'all' && fid !== siteId) {
+      navigate(`${createPageUrl('SiteSurvey')}?siteId=${fid}`);
+    }
   }, [pageFilters.facility_id, siteId, navigate]);
 
   // Mocking data since we might not have records yet, but using entity structure
@@ -30,14 +38,14 @@ export default function SiteSurvey() {
   });
 
   const filteredSurveys = surveys?.filter(survey => {
-      const f = pageFilters;
-      if (f.facility_id && f.facility_id !== 'all' && !survey.facility_id?.toLowerCase().includes(f.facility_id.toLowerCase())) return false;
-      
-      if (f.search) {
-          const s = f.search.toLowerCase();
-          return survey.client?.toLowerCase().includes(s) || survey.address?.toLowerCase().includes(s) || survey.facility_id?.toLowerCase().includes(s);
-      }
-      return true;
+    const f = pageFilters;
+    if (f.facility_id && f.facility_id !== 'all' && !survey.facility_id?.toLowerCase().includes(f.facility_id.toLowerCase())) return false;
+
+    if (f.search) {
+      const s = f.search.toLowerCase();
+      return survey.client?.toLowerCase().includes(s) || survey.address?.toLowerCase().includes(s) || survey.facility_id?.toLowerCase().includes(s);
+    }
+    return true;
   }) || [];
 
   return (
@@ -49,7 +57,17 @@ export default function SiteSurvey() {
           <h1 className="text-3xl font-bold text-gray-900">Site Survey & Documentation</h1>
           <p className="text-gray-500 mt-1">Field reports and technical feasibility studies.</p>
         </div>
-        <Button className="bg-[#0a1f33]">New Survey</Button>
+        <div className="flex gap-3">
+          <ReplanButton
+            siteId={siteId}
+            currentStep={3}
+            variant={replanNeeded ? "destructive" : "outline"}
+            className={replanNeeded ? "animate-pulse shadow-md" : ""}
+          >
+            {replanNeeded ? "Replanning Required" : "AI Replan"}
+          </ReplanButton>
+          <Button className="bg-[#0a1f33]">New Survey</Button>
+        </div>
       </div>
 
       {/* Workflow Timeline */}
@@ -58,15 +76,15 @@ export default function SiteSurvey() {
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Empty State / Mock if no data */}
         {(!filteredSurveys || filteredSurveys.length === 0) && (
-             <Card className="col-span-full p-12 text-center border-dashed">
-                <div className="flex justify-center mb-4">
-                    <FileText className="w-12 h-12 text-gray-300" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900">No Surveys Found</h3>
-                <p className="text-gray-500 mt-1">Try adjusting your filters or create a new survey.</p>
-             </Card>
+          <Card className="col-span-full p-12 text-center border-dashed">
+            <div className="flex justify-center mb-4">
+              <FileText className="w-12 h-12 text-gray-300" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900">No Surveys Found</h3>
+            <p className="text-gray-500 mt-1">Try adjusting your filters or create a new survey.</p>
+          </Card>
         )}
-        
+
         {filteredSurveys.map((survey) => (
           <SurveyCard key={survey.id} survey={survey} />
         ))}

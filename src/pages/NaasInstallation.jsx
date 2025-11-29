@@ -1,11 +1,12 @@
-import React, { useEffect } from 'react';
-import { 
-  ChevronRight, 
-  ArrowLeft, 
+import React, { useEffect, useState } from 'react';
+import {
+  ChevronRight,
+  ArrowLeft,
   CheckCircle2,
   LayoutDashboard,
   Construction,
-  Loader2
+  Loader2,
+  Clock
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from 'react-router-dom';
@@ -27,6 +28,7 @@ import WorkExecution from '@/components/naas/WorkExecution';
 import TechnicalConfig from '@/components/naas/TechnicalConfig';
 import WorkflowTimeline from '@/components/shared/WorkflowTimeline';
 import PageFilter from '@/components/shared/PageFilter';
+import ReplanButton from '@/components/ReplanButton';
 
 export default function NaasInstallation() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -34,35 +36,42 @@ export default function NaasInstallation() {
   const orderId = urlParams.get("orderId");
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = React.useState(false);
+  const [isTimelineOpen, setIsTimelineOpen] = useState(false);
+  const [replanNeeded, setReplanNeeded] = useState(false);
+
+  // Mock logic for replanNeeded
+  useEffect(() => {
+    // Logic to determine if replan is needed
+  }, []);
   const [lastSaved, setLastSaved] = React.useState(null);
   const [showSaveSuccess, setShowSaveSuccess] = React.useState(false);
   const [pageFilters, setPageFilters] = React.useState({});
 
   useEffect(() => {
-      const fid = pageFilters.facility_id;
-      const oid = pageFilters.order_id;
-      
-      let nextUrl = createPageUrl('NaasInstallation');
-      let params = new URLSearchParams();
-      let hasChanges = false;
+    const fid = pageFilters.facility_id;
+    const oid = pageFilters.order_id;
 
-      if (fid && fid !== 'all') {
-          params.set('siteId', fid);
-          if (fid !== siteId) hasChanges = true;
-      } else {
-          params.set('siteId', siteId);
-      }
+    let nextUrl = createPageUrl('NaasInstallation');
+    let params = new URLSearchParams();
+    let hasChanges = false;
 
-      if (oid && oid !== 'all') {
-          params.set('orderId', oid);
-          if (oid !== orderId) hasChanges = true;
-      } else if (orderId) {
-          params.set('orderId', orderId);
-      }
+    if (fid && fid !== 'all') {
+      params.set('siteId', fid);
+      if (fid !== siteId) hasChanges = true;
+    } else {
+      params.set('siteId', siteId);
+    }
 
-      if (hasChanges) {
-          navigate(`${nextUrl}?${params.toString()}`);
-      }
+    if (oid && oid !== 'all') {
+      params.set('orderId', oid);
+      if (oid !== orderId) hasChanges = true;
+    } else if (orderId) {
+      params.set('orderId', orderId);
+    }
+
+    if (hasChanges) {
+      navigate(`${nextUrl}?${params.toString()}`);
+    }
   }, [pageFilters, siteId, orderId, navigate]);
 
   const handleSaveDraft = () => {
@@ -114,11 +123,18 @@ export default function NaasInstallation() {
           </div>
 
           <div className="flex gap-3">
-            <Link to={createPageUrl('DataSources')}>
-              <Button variant="outline" className="bg-white">
-                Workflow Timeline
-              </Button>
-            </Link>
+            <ReplanButton
+              siteId={siteId}
+              orderId={orderId}
+              currentStep={6}
+              variant={replanNeeded ? "destructive" : "outline"}
+              className={replanNeeded ? "animate-pulse shadow-md" : ""}
+            >
+              {replanNeeded ? "Replanning Required" : "AI Replan"}
+            </ReplanButton>
+            <Button variant="outline" onClick={() => setIsTimelineOpen(true)}>
+              <Clock className="w-4 h-4 mr-2" /> Workflow Timeline
+            </Button>
             <Link to={createPageUrl('Rfs') + `?siteId=${siteId}&orderId=${orderId || ''}`}>
               <Button className="bg-[#0a1f33] hover:bg-[#153250]">
                 Next: Ready For Service <ChevronRight className="w-4 h-4 ml-2" />
