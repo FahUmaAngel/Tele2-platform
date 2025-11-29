@@ -186,7 +186,7 @@ export default function AlertsPanel() {
         </div>
         {alerts.length > 0 && (
           <div className="p-3 border-t border-gray-100 text-center">
-            <Link to={`${createPageUrl('SiteOverview')}?alerts=${alertFacilityIds}`}>
+            <Link to={`${createPageUrl('SiteOverview')}?status=Delayed,Blocked`}>
               <Button variant="ghost" size="sm" className="text-xs w-full text-gray-500">
                 View All Alerts
               </Button>
