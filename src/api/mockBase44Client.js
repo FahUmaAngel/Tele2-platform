@@ -90,6 +90,8 @@ const store = {
         if (item.facility_id === 'SITE-SE-04') {
             photo_count = 1;
             photo_validation = 'failed';
+            item.order_id = 'ORD-2025-004';
+            item.updated_date = new Date().toISOString();
         }
 
         // SITE-SE-05: Config issue - Incomplete configuration
@@ -105,6 +107,22 @@ const store = {
             activation_status = 'failed';
             test_results = 'failed';
             ping_test = 'failed';
+        }
+
+        // RFS AI Detection Mock Data
+        let acceptanceStatus = 'ACCEPTED';
+        let customerComplaint = '';
+
+        // SITE-SE-04: RFS Issue - Installation Not Approved
+        if (item.facility_id === 'SITE-SE-04') {
+            acceptanceStatus = 'PENDING';
+            customerComplaint = 'Network speed performance is lower than expected according to the service agreement.';
+        }
+
+        // SITE-SE-05: RFS Issue - Installation Not Approved (Another case)
+        if (item.facility_id === 'SITE-SE-05') {
+            acceptanceStatus = 'PENDING';
+            customerComplaint = 'Latency is too high for our VoIP application.';
         }
 
         return {
@@ -132,7 +150,10 @@ const store = {
             test_results,
             ping_test,
             speed_test,
-            time_slot
+            time_slot,
+            // RFS AI Detection fields
+            acceptanceStatus,
+            customerComplaint
         };
     }),
     NetworkDesign: processEntityData(parseCsv(networkDesignCsv), [

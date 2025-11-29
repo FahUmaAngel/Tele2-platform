@@ -11,7 +11,9 @@ import {
   Download,
   Share2,
   PlayCircle,
-  Activity
+  Activity,
+  AlertTriangle,
+  ChevronRight
 } from "lucide-react";
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -35,6 +37,8 @@ import InvoicingPanel from '@/components/rfs/InvoicingPanel';
 import WorkflowTimeline from '@/components/shared/WorkflowTimeline';
 import PageFilter from '@/components/shared/PageFilter';
 import ReplanButton from '@/components/ReplanButton';
+import { detectAcceptanceIssues } from '@/utils/RfsAIDetection';
+import RfsReplanningModal from '@/components/rfs/RfsReplanningModal';
 
 export default function Rfs() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -45,13 +49,12 @@ export default function Rfs() {
   const tabParam = urlParams.get("tab");
   const [activeTab, setActiveTab] = useState(tabParam || "health");
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
-  const [pageFilters, setPageFilters] = React.useState({});
-  const [replanNeeded, setReplanNeeded] = React.useState(false);
+  const [pageFilters, setPageFilters] = React.useState({ facility_id: '', order_id: '' });
 
-  // Mock logic for replanNeeded
-  React.useEffect(() => {
-    // Logic to determine if replan is needed
-  }, []);
+  // AI Detection State
+  const [replanNeeded, setReplanNeeded] = useState(false);
+  const [detectedIssue, setDetectedIssue] = useState(null);
+  const [isReplanModalOpen, setIsReplanModalOpen] = useState(false);
 
   useEffect(() => {
     const fid = pageFilters.facility_id;
@@ -98,10 +101,30 @@ export default function Rfs() {
       return orders?.[0] || {
         client: "Unknown Client",
         address: "Unknown Address",
-        municipality: "Unknown"
+        municipality: "Unknown",
+        status: "Unknown",
+        rfs_status: "pending"
       };
     }
   });
+
+  // AI Detection Logic
+  useEffect(() => {
+    if (fiberOrder) {
+      const issue = detectAcceptanceIssues(fiberOrder);
+      if (issue) {
+        setReplanNeeded(true);
+        setDetectedIssue(issue);
+        // Auto-open modal if high severity and on acceptance tab
+        if (activeTab === 'acceptance' && !isReplanModalOpen) {
+          // Optional: could auto-open, but maybe less intrusive to just show button pulse
+        }
+      } else {
+        setReplanNeeded(false);
+        setDetectedIssue(null);
+      }
+    }
+  }, [fiberOrder, activeTab]);
 
   // --- Mutations ---
   const createOrUpdateReport = useMutation({
@@ -165,216 +188,260 @@ export default function Rfs() {
     setShowCompletionDialog(true);
   };
 
-  const isRfsReady = rfsReport?.customer_signature && rfsReport?.health_score > 80;
+  const isRfsReady = rfsReport?.health_score > 90 && rfsReport?.customer_signature;
+
+  // Replan Actions
+  const handleOpenReplan = () => {
+    if (replanNeeded && detectedIssue) {
+      setIsReplanModalOpen(true);
+    } else {
+      toast.info("No AI replanning suggestions available at this time.");
+    }
+  };
+
+  const handleApplySuggestion = async (issue) => {
+    // Mock applying suggestion
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    toast.success("AI resolution workflow initiated successfully");
+    setIsReplanModalOpen(false);
+    // In real app, would trigger mutation here
+  };
+
+  const handleManualEdit = () => {
+    setActiveTab('acceptance');
+    setIsReplanModalOpen(false);
+  };
 
   return (
-    <div className="space-y-8 pb-20">
-      <PageFilter onFilterChange={setPageFilters} defaultFilters={{ facility_id: siteId, order_id: orderId }} />
+    <div className="min-h-screen bg-gray-50/50 pb-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        <PageFilter
+          onFilterChange={setPageFilters}
+          defaultFilters={{ facility_id: siteId, order_id: orderId }}
+        />
 
-      {/* Header */}
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-          <Link to={createPageUrl('Home')} className="hover:text-blue-600 transition-colors">
-            Dashboard
-          </Link>
-          <span className="text-gray-300">/</span>
-          <Link to={createPageUrl('SiteOverview')} className="hover:text-blue-600 transition-colors">
-            Sites
-          </Link>
-          <span className="text-gray-300">/</span>
-          <Link to={createPageUrl('NaasInstallation') + `?siteId=${siteId}&orderId=${orderId || ''}`} className="hover:text-blue-600 transition-colors">
-            {siteId}
-          </Link>
-          <span className="text-gray-300">/</span>
-          <span className="font-medium text-gray-900">{orderId || "Select Order"}</span>
-        </div>
-
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
-                Ready For Service (RFS)
-              </h1>
-              {rfsReport?.rfs_status === 'completed' && (
-                <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-green-200">
-                  <CheckCircle2 className="w-3 h-3 mr-1" /> Completed
-                </Badge>
-              )}
-            </div>
-            <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-              <span className="flex items-center gap-1">
-                Order ID: <span className="font-semibold text-gray-900">{fiberOrder?.order_id || orderId || "N/A"}</span>
-              </span>
-              <span className="w-1 h-1 bg-gray-300 rounded-full" />
-              <span className="flex items-center gap-1">
-                <Server className="w-4 h-4" /> Site ID: <span className="font-semibold text-gray-900">{siteId}</span>
-              </span>
-            </div>
-          </div>
-
-          <div className="flex gap-3">
-            <ReplanButton
-              siteId={siteId}
-              orderId={orderId}
-              currentStep={7}
-              variant={replanNeeded ? "destructive" : "outline"}
-              className={replanNeeded ? "animate-pulse shadow-md" : ""}
-            >
-              {replanNeeded ? "Replanning Required" : "AI Replan"}
-            </ReplanButton>
-            <Link to={createPageUrl('NaasInstallation') + `?siteId=${siteId}&orderId=${orderId || fiberOrder?.order_id || ''}`}>
-              <Button variant="outline" className="bg-white">
-                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Installation
-              </Button>
+        {/* Header */}
+        <div className="flex flex-col gap-4">
+          {/* Breadcrumbs */}
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <Link to={createPageUrl('Home')} className="hover:text-blue-600 transition-colors">
+              Dashboard
             </Link>
-            <Button variant="outline" className="bg-white">
-              <Share2 className="w-4 h-4 mr-2" /> Share Report
-            </Button>
-            <Button
-              className={`${rfsReport?.rfs_status === 'completed' ? 'bg-gray-100 text-gray-400' : 'bg-[#0a1f33] hover:bg-[#153250]'}`}
-              disabled={!isRfsReady || rfsReport?.rfs_status === 'completed'}
-              onClick={handleCompleteRfs}
-            >
-              <PlayCircle className="w-4 h-4 mr-2" />
-              {rfsReport?.rfs_status === 'completed' ? "RFS Completed" : "Finalize RFS"}
-            </Button>
+            <ChevronRight className="w-4 h-4" />
+            <Link to={createPageUrl('SiteOverview')} className="hover:text-blue-600 transition-colors">
+              Sites
+            </Link>
+            <ChevronRight className="w-4 h-4" />
+            <Link to={createPageUrl('FiberOrdering') + `?siteId=${siteId}`} className="hover:text-blue-600 transition-colors">
+              {siteId}
+            </Link>
+            <ChevronRight className="w-4 h-4" />
+            <span className="font-medium text-gray-900">RFS: {orderId || "Select Order"}</span>
           </div>
-        </div>
-      </div>
 
-      {/* Workflow Timeline */}
-      <WorkflowTimeline currentStep={7} />
-
-      {/* Main Content */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="bg-white p-1 border border-gray-200 rounded-lg w-full md:w-auto flex-wrap h-auto">
-          <TabsTrigger value="health" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
-            <Activity className="w-4 h-4 mr-2" /> Network Health (AI)
-          </TabsTrigger>
-          <TabsTrigger value="acceptance" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
-            <ShieldCheck className="w-4 h-4 mr-2" /> Customer Acceptance
-          </TabsTrigger>
-          <TabsTrigger value="invoice" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
-            <FileText className="w-4 h-4 mr-2" /> Invoicing & Completion
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="health" className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-          <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg flex items-start gap-3">
-            <div className="p-2 bg-blue-100 rounded-full">
-              <Server className="w-5 h-5 text-blue-600" />
-            </div>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h3 className="font-semibold text-blue-900">AI-Driven Network Monitoring</h3>
-              <p className="text-sm text-blue-700">
-                Real-time telemetry analysis is active. The AI model is monitoring for anomalies and predictive failure patterns.
-                Ensure Health Score is above 90 before requesting customer sign-off.
-              </p>
-            </div>
-          </div>
-
-          <NetworkHealthMonitor
-            siteId={siteId}
-            onHealthUpdate={handleHealthUpdate}
-          />
-        </TabsContent>
-
-        <TabsContent value="acceptance" className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="md:col-span-2 space-y-6">
-              <CustomerAcceptance
-                onSignOff={handleSignOff}
-                isSigned={!!rfsReport?.customer_signature}
-                signedData={rfsReport}
-              />
-            </div>
-            <div className="space-y-6">
-              <div className="bg-gray-50 p-6 rounded-xl border border-gray-100">
-                <h3 className="font-semibold mb-4">Pre-Acceptance Checklist</h3>
-                <ul className="space-y-3">
-                  {[
-                    { label: "Physical Installation Verified", done: true },
-                    { label: "Power & Cooling Tests", done: true },
-                    { label: "Network Health Score > 90", done: (rfsReport?.health_score || 0) > 90 },
-                    { label: "Failover Redundancy Test", done: true },
-                    { label: "Port Configuration Audit", done: true }
-                  ].map((item, i) => (
-                    <li key={i} className="flex items-center gap-3 text-sm">
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center ${item.done ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-400'}`}>
-                        <CheckCircle2 className="w-3 h-3" />
-                      </div>
-                      <span className={item.done ? 'text-gray-900' : 'text-gray-500'}>{item.label}</span>
-                    </li>
-                  ))}
-                </ul>
+              <h1 className="text-3xl font-bold text-gray-900 tracking-tight flex items-center gap-3">
+                Ready For Service (RFS)
+                {rfsReport?.rfs_status === 'completed' && (
+                  <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200 text-sm px-3 py-1">
+                    <CheckCircle2 className="w-4 h-4 mr-1" /> Completed
+                  </Badge>
+                )}
+              </h1>
+              <div className="flex items-center gap-3 mt-2">
+                <span className="px-2 py-1 bg-gray-100 rounded text-xs font-medium text-gray-600">
+                  Facility ID: {siteId} • Order ID: {orderId || "N/A"}
+                </span>
+                <span className="w-1 h-1 bg-gray-300 rounded-full" />
+                <span className="text-sm text-gray-500">{fiberOrder?.client || "Client N/A"}</span>
+                <span className="w-1 h-1 bg-gray-300 rounded-full" />
+                <span className="text-sm text-gray-500">Final Validation & Handover</span>
               </div>
             </div>
+
+            <div className="flex gap-3">
+              <ReplanButton
+                siteId={siteId}
+                orderId={orderId}
+                currentStep={7}
+                variant={replanNeeded ? "destructive" : "outline"}
+                className={replanNeeded ? "animate-pulse shadow-md" : ""}
+                onClick={handleOpenReplan}
+              >
+                {replanNeeded ? "Replanning Required" : "AI Replan"}
+              </ReplanButton>
+              <Link to={createPageUrl('NaasInstallation') + `?siteId=${siteId}&orderId=${orderId || fiberOrder?.order_id || ''}`}>
+                <Button variant="outline" className="bg-white">
+                  <ArrowLeft className="w-4 h-4 mr-2" /> Back to Installation
+                </Button>
+              </Link>
+              <Button variant="outline" className="bg-white">
+                <Share2 className="w-4 h-4 mr-2" /> Share Report
+              </Button>
+              <Button
+                className={`${rfsReport?.rfs_status === 'completed' ? 'bg-gray-100 text-gray-400' : 'bg-[#0a1f33] hover:bg-[#153250]'}`}
+                disabled={!isRfsReady || rfsReport?.rfs_status === 'completed'}
+                onClick={handleCompleteRfs}
+              >
+                <PlayCircle className="w-4 h-4 mr-2" />
+                {rfsReport?.rfs_status === 'completed' ? "RFS Completed" : "Finalize RFS"}
+              </Button>
+            </div>
           </div>
-        </TabsContent>
+        </div>
 
-        <TabsContent value="invoice" className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-          <div className="grid md:grid-cols-2 gap-8">
-            <InvoicingPanel
-              status={rfsReport?.invoice_status}
-              onGenerateInvoice={handleGenerateInvoice}
-              rfsReady={!!rfsReport?.customer_signature}
+        {/* Workflow Timeline */}
+        <WorkflowTimeline currentStep={7} />
+
+        {/* Main Content */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="bg-white p-1 border border-gray-200 rounded-lg w-full md:w-auto flex-wrap h-auto">
+            <TabsTrigger value="health" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
+              <Activity className="w-4 h-4 mr-2" /> Network Health (AI)
+            </TabsTrigger>
+            <TabsTrigger value="acceptance" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 relative">
+              <ShieldCheck className="w-4 h-4 mr-2" /> Customer Acceptance
+              {replanNeeded && detectedIssue?.category === 'acceptance' && (
+                <div className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 shadow-sm animate-bounce" title="Action Required">
+                  <AlertTriangle className="w-3 h-3" />
+                </div>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="invoice" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
+              <FileText className="w-4 h-4 mr-2" /> Invoicing & Completion
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="health" className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+            <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg flex items-start gap-3">
+              <div className="p-2 bg-blue-100 rounded-full">
+                <Server className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-blue-900">AI-Driven Network Monitoring</h3>
+                <p className="text-sm text-blue-700">
+                  Real-time telemetry analysis is active. The AI model is monitoring for anomalies and predictive failure patterns.
+                  Ensure Health Score is above 90 before requesting customer sign-off.
+                </p>
+              </div>
+            </div>
+
+            <NetworkHealthMonitor
+              siteId={siteId}
+              onHealthUpdate={handleHealthUpdate}
             />
+          </TabsContent>
 
-            <div className="space-y-6">
-              <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                <h3 className="font-semibold mb-4">Completion Summary</h3>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center py-2 border-b border-gray-50">
-                    <span className="text-gray-500 text-sm">Installation Phase</span>
-                    <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Complete</Badge>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-gray-50">
-                    <span className="text-gray-500 text-sm">Network Validation</span>
-                    <Badge className={rfsReport?.health_score > 90 ? "bg-green-100 text-green-700 hover:bg-green-100" : "bg-yellow-100 text-yellow-700 hover:bg-yellow-100"}>
-                      {rfsReport?.health_score > 90 ? "Passed" : "Review Needed"}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-gray-50">
-                    <span className="text-gray-500 text-sm">Customer Acceptance</span>
-                    <Badge className={rfsReport?.customer_signature ? "bg-green-100 text-green-700 hover:bg-green-100" : "bg-gray-100 text-gray-500 hover:bg-gray-100"}>
-                      {rfsReport?.customer_signature ? "Signed" : "Pending"}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-gray-50">
-                    <span className="text-gray-500 text-sm">Final Invoice</span>
-                    <Badge className={rfsReport?.invoice_status === 'generated' ? "bg-green-100 text-green-700 hover:bg-green-100" : "bg-gray-100 text-gray-500 hover:bg-gray-100"}>
-                      {rfsReport?.invoice_status === 'generated' ? "Sent" : "Pending"}
-                    </Badge>
+          <TabsContent value="acceptance" className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="md:col-span-2 space-y-6">
+                <CustomerAcceptance
+                  onSignOff={handleSignOff}
+                  isSigned={!!rfsReport?.customer_signature}
+                  signedData={rfsReport}
+                  acceptanceStatus={fiberOrder?.acceptanceStatus || (rfsReport?.customer_signature ? 'ACCEPTED' : 'PENDING')}
+                  customerComplaint={fiberOrder?.customerComplaint}
+                />
+              </div>
+              <div className="space-y-6">
+                <div className="bg-gray-50 p-6 rounded-xl border border-gray-100">
+                  <h3 className="font-semibold mb-4">Pre-Acceptance Checklist</h3>
+                  <ul className="space-y-3">
+                    {[
+                      { label: "Physical Installation Verified", done: true },
+                      { label: "Power & Cooling Tests", done: true },
+                      { label: "Network Health Score > 90", done: (rfsReport?.health_score || 0) > 90 },
+                      { label: "Failover Redundancy Test", done: true },
+                      { label: "Port Configuration Audit", done: true }
+                    ].map((item, i) => (
+                      <li key={i} className="flex items-center gap-3 text-sm">
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center ${item.done ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-400'}`}>
+                          <CheckCircle2 className="w-3 h-3" />
+                        </div>
+                        <span className={item.done ? 'text-gray-900' : 'text-gray-500'}>{item.label}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="invoice" className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+            <div className="grid md:grid-cols-2 gap-8">
+              <InvoicingPanel
+                status={rfsReport?.invoice_status}
+                onGenerateInvoice={handleGenerateInvoice}
+                rfsReady={!!rfsReport?.customer_signature}
+              />
+
+              <div className="space-y-6">
+                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                  <h3 className="font-semibold mb-4">Completion Summary</h3>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center py-2 border-b border-gray-50">
+                      <span className="text-gray-500 text-sm">Installation Phase</span>
+                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Complete</Badge>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b border-gray-50">
+                      <span className="text-gray-500 text-sm">Network Validation</span>
+                      <Badge className={rfsReport?.health_score > 90 ? "bg-green-100 text-green-700 hover:bg-green-100" : "bg-yellow-100 text-yellow-700 hover:bg-yellow-100"}>
+                        {rfsReport?.health_score > 90 ? "Passed" : "Review Needed"}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b border-gray-50">
+                      <span className="text-gray-500 text-sm">Customer Acceptance</span>
+                      <Badge className={rfsReport?.customer_signature ? "bg-green-100 text-green-700 hover:bg-green-100" : "bg-gray-100 text-gray-500 hover:bg-gray-100"}>
+                        {rfsReport?.customer_signature ? "Signed" : "Pending"}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b border-gray-50">
+                      <span className="text-gray-500 text-sm">Final Invoice</span>
+                      <Badge className={rfsReport?.invoice_status === 'generated' ? "bg-green-100 text-green-700 hover:bg-green-100" : "bg-gray-100 text-gray-500 hover:bg-gray-100"}>
+                        {rfsReport?.invoice_status === 'generated' ? "Sent" : "Pending"}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+        </Tabs>
 
-      {/* Completion Dialog */}
-      <Dialog open={showCompletionDialog} onOpenChange={setShowCompletionDialog}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-green-600">
-              <CheckCircle2 className="w-6 h-6" /> RFS Completed Successfully
-            </DialogTitle>
-            <DialogDescription className="pt-2">
-              The site <strong>{siteId}</strong> is now officially live and marked as Ready For Service.
-              <br /><br />
-              • Operations team notified<br />
-              • Billing cycle activated<br />
-              • Warranty period started
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Link to={createPageUrl('Home')}>
-              <Button className="w-full">Return to Dashboard</Button>
-            </Link>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        {/* Completion Dialog */}
+        <Dialog open={showCompletionDialog} onOpenChange={setShowCompletionDialog}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-green-600">
+                <CheckCircle2 className="w-6 h-6" /> RFS Completed Successfully
+              </DialogTitle>
+              <DialogDescription className="pt-2">
+                The site <strong>{siteId}</strong> is now officially live and marked as Ready For Service.
+                <br /><br />
+                • Operations team notified<br />
+                • Billing cycle activated<br />
+                • Warranty period started
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Link to={createPageUrl('Home')}>
+                <Button className="w-full">Return to Dashboard</Button>
+              </Link>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* AI Replanning Modal */}
+        <RfsReplanningModal
+          open={isReplanModalOpen}
+          onOpenChange={setIsReplanModalOpen}
+          detectedIssue={detectedIssue}
+          onKeepCurrent={() => setIsReplanModalOpen(false)}
+          onManualEdit={handleManualEdit}
+          onAcceptSuggestion={handleApplySuggestion}
+        />
+      </div>
     </div>
   );
 }
