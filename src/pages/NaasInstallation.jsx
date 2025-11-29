@@ -29,6 +29,11 @@ import TechnicalConfig from '@/components/naas/TechnicalConfig';
 import WorkflowTimeline from '@/components/shared/WorkflowTimeline';
 import PageFilter from '@/components/shared/PageFilter';
 import ReplanButton from '@/components/ReplanButton';
+import NaasReplanningModal from '@/components/naas/NaasReplanningModal';
+import { detectAllIssues, isReplanningNeeded } from '@/utils/NaasAIDetection';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
 
 export default function NaasInstallation() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -38,11 +43,41 @@ export default function NaasInstallation() {
   const [isSaving, setIsSaving] = React.useState(false);
   const [isTimelineOpen, setIsTimelineOpen] = useState(false);
   const [replanNeeded, setReplanNeeded] = useState(false);
+  const [detectedIssues, setDetectedIssues] = useState([]);
+  const [activeIssue, setActiveIssue] = useState(null);
+  const [isReplanModalOpen, setIsReplanModalOpen] = useState(false);
 
-  // Mock logic for replanNeeded
+  const queryClient = useQueryClient();
+
+  // Fetch order data for AI detection
+  const { data: orderData } = useQuery({
+    queryKey: ['naas-order', siteId, orderId],
+    queryFn: () => base44.entities.FiberOrder.list(),
+    select: (orders) => orders.find(o => o.facility_id === siteId),
+    enabled: !!siteId
+  });
+
+  // Update order mutation
+  const updateOrderMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.FiberOrder.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['naas-order', siteId, orderId] });
+    }
+  });
+
+  // AI Detection logic
   useEffect(() => {
-    // Logic to determine if replan is needed
-  }, []);
+    if (orderData) {
+      const issues = detectAllIssues(orderData);
+      setDetectedIssues(issues);
+      setReplanNeeded(isReplanningNeeded(issues));
+
+      // Auto-open modal if high-severity issues detected
+      if (issues.length > 0 && isReplanningNeeded(issues)) {
+        setActiveIssue(issues[0]); // Show first high-severity issue
+      }
+    }
+  }, [orderData]);
   const [lastSaved, setLastSaved] = React.useState(null);
   const [showSaveSuccess, setShowSaveSuccess] = React.useState(false);
   const [pageFilters, setPageFilters] = React.useState({});
@@ -123,15 +158,20 @@ export default function NaasInstallation() {
           </div>
 
           <div className="flex gap-3">
-            <ReplanButton
-              siteId={siteId}
-              orderId={orderId}
-              currentStep={6}
+            <Button
               variant={replanNeeded ? "destructive" : "outline"}
               className={replanNeeded ? "animate-pulse shadow-md" : ""}
+              onClick={() => {
+                if (detectedIssues.length > 0) {
+                  setActiveIssue(detectedIssues[0]);
+                  setIsReplanModalOpen(true);
+                } else {
+                  toast.info("No issues detected. Installation is on track!");
+                }
+              }}
             >
               {replanNeeded ? "Replanning Required" : "AI Replan"}
-            </ReplanButton>
+            </Button>
             <Button variant="outline" onClick={() => setIsTimelineOpen(true)}>
               <Clock className="w-4 h-4 mr-2" /> Workflow Timeline
             </Button>
@@ -169,6 +209,99 @@ export default function NaasInstallation() {
         <h2 className="text-lg font-semibold text-gray-900">Technical Configuration & Activation</h2>
         <TechnicalConfig siteId={siteId} />
       </div>
+
+      {/* NaaS AI Replanning Modal */}
+      <NaasReplanningModal
+        open={isReplanModalOpen}
+        onOpenChange={setIsReplanModalOpen}
+        detectedIssue={activeIssue}
+        onKeepCurrent={() => {
+          setIsReplanModalOpen(false);
+        }}
+        onManualEdit={(category) => {
+          // Scroll to relevant section
+          const sectionMap = {
+            resource: 'Resource & Scheduling',
+            schedule: 'Resource & Scheduling',
+            execution: 'Work Execution',
+            photo: 'Work Execution',
+            config: 'Technical Configuration & Activation',
+            activation: 'Technical Configuration & Activation'
+          };
+          const sectionTitle = sectionMap[category];
+          const element = document.querySelector(`h2:contains("${sectionTitle}")`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+          toast.info("Please make manual edits in the highlighted section");
+        }}
+        onAcceptSuggestion={async (issue) => {
+          if (!orderData) return;
+
+          const toastId = toast.loading("Applying AI suggestion...");
+          try {
+            // Build update data based on issue category
+            let updateData = {};
+
+            switch (issue.category) {
+              case 'resource':
+                updateData = {
+                  technician_team: issue.suggestedData.technician,
+                  technician_status: issue.suggestedData.status
+                };
+                break;
+              case 'schedule':
+                updateData = {
+                  scheduled_date: issue.suggestedData.date,
+                  time_slot: issue.suggestedData.timeSlot,
+                  weather_risk: issue.suggestedData.weatherRisk
+                };
+                break;
+              case 'execution':
+                updateData = {
+                  checklist_completion: 100
+                };
+                break;
+              case 'photo':
+                updateData = {
+                  photo_validation: 'pending'
+                };
+                break;
+              case 'config':
+                updateData = {
+                  config_status: 'complete',
+                  device_ip: issue.suggestedData.deviceIP,
+                  subnet_mask: issue.suggestedData.subnetMask
+                };
+                break;
+              case 'activation':
+                updateData = {
+                  activation_status: 'pending',
+                  test_results: 'pending'
+                };
+                break;
+            }
+
+            await updateOrderMutation.mutateAsync({
+              id: orderData.id,
+              data: updateData
+            });
+
+            toast.dismiss(toastId);
+            toast.success("AI suggestion applied successfully!");
+            setIsReplanModalOpen(false);
+
+            // Remove the resolved issue from detected issues
+            const remainingIssues = detectedIssues.filter(i => i.category !== issue.category);
+            setDetectedIssues(remainingIssues);
+            setReplanNeeded(isReplanningNeeded(remainingIssues));
+          } catch (error) {
+            toast.dismiss(toastId);
+            toast.error("Failed to apply suggestion. Please try again.");
+            console.error("Apply suggestion error:", error);
+          }
+        }}
+      />
 
       {/* Save Success Popup */}
       <Dialog open={showSaveSuccess} onOpenChange={setShowSaveSuccess}>

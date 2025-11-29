@@ -49,13 +49,90 @@ const store = {
             rfs_status = 'pending_approval';
         }
 
+        // NaaS AI Detection Mock Data
+        let technician_status = 'available';
+        let technician_response_time = 0;
+        let schedule_conflict = false;
+        let weather_risk = 'low';
+        let traffic_alert = false;
+        let checklist_completion = 100;
+        let failed_checklist_items = [];
+        let photo_count = 3;
+        let photo_validation = 'passed';
+        let config_status = 'complete';
+        let config_validation = 'passed';
+        let device_ip = '192.168.1.100';
+        let subnet_mask = '255.255.255.0';
+        let activation_status = 'active';
+        let test_results = 'passed';
+        let ping_test = 'passed';
+        let speed_test = 'passed';
+        let time_slot = '09:00 - 12:00';
+
+        // SITE-SE-01: Resource issue - Technician sick
+        if (item.facility_id === 'SITE-SE-01') {
+            technician_status = 'sick';
+        }
+
+        // SITE-SE-02: Schedule issue - Weather risk
+        if (item.facility_id === 'SITE-SE-02') {
+            weather_risk = 'high';
+            schedule_conflict = true;
+        }
+
+        // SITE-SE-03: Execution issue - Incomplete checklist
+        if (item.facility_id === 'SITE-SE-03') {
+            checklist_completion = 66;
+            failed_checklist_items = ['Power redundancy verified'];
+        }
+
+        // SITE-SE-04: Photo issue - Missing photos
+        if (item.facility_id === 'SITE-SE-04') {
+            photo_count = 1;
+            photo_validation = 'failed';
+        }
+
+        // SITE-SE-05: Config issue - Incomplete configuration
+        if (item.facility_id === 'SITE-SE-05') {
+            config_status = 'incomplete';
+            config_validation = 'failed';
+            device_ip = '';
+            subnet_mask = '';
+        }
+
+        // SITE-SE-06: Activation issue - Test failures
+        if (item.facility_id === 'SITE-SE-06') {
+            activation_status = 'failed';
+            test_results = 'failed';
+            ping_test = 'failed';
+        }
+
         return {
             ...item,
             lat: item.lat ? parseFloat(item.lat) : null,
             lng: item.lng ? parseFloat(item.lng) : null,
             priority: item.priority ? parseInt(item.priority, 10) : 3,
             access_status,
-            rfs_status
+            rfs_status,
+            // NaaS AI Detection fields
+            technician_status,
+            technician_response_time,
+            schedule_conflict,
+            weather_risk,
+            traffic_alert,
+            checklist_completion,
+            failed_checklist_items,
+            photo_count,
+            photo_validation,
+            config_status,
+            config_validation,
+            device_ip,
+            subnet_mask,
+            activation_status,
+            test_results,
+            ping_test,
+            speed_test,
+            time_slot
         };
     }),
     NetworkDesign: processEntityData(parseCsv(networkDesignCsv), [
