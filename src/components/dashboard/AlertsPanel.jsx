@@ -78,6 +78,87 @@ export default function AlertsPanel() {
           link: `${createPageUrl('Rfs')}?siteId=${order.facility_id}&tab=acceptance`
         });
       }
+
+      // NaaS Installation AI Detection Alerts
+
+      // NaaS 1: Technician Assignment Issues
+      if (order.technician_status === 'unavailable' || order.technician_status === 'sick' ||
+        (order.technician_response_time && order.technician_response_time > 24)) {
+        alerts.push({
+          id: `naas-technician-${order.facility_id}`,
+          title: "Technician assignment issue",
+          facility_id: order.facility_id,
+          type: "resource",
+          severity: "high",
+          timestamp: order.updated_date,
+          link: `${createPageUrl('NaasInstallation')}?siteId=${order.facility_id}&section=resource`
+        });
+      }
+
+      // NaaS 2: Schedule Conflicts
+      if (order.schedule_conflict || order.weather_risk === 'high' || order.traffic_alert) {
+        alerts.push({
+          id: `naas-schedule-${order.facility_id}`,
+          title: "Installation schedule conflict",
+          facility_id: order.facility_id,
+          type: "schedule",
+          severity: "high",
+          timestamp: order.updated_date,
+          link: `${createPageUrl('NaasInstallation')}?siteId=${order.facility_id}&section=schedule`
+        });
+      }
+
+      // NaaS 3: Incomplete Checklist
+      if (order.checklist_completion && order.checklist_completion < 100 && order.status === 'In Progress') {
+        alerts.push({
+          id: `naas-checklist-${order.facility_id}`,
+          title: "Installation checklist incomplete",
+          facility_id: order.facility_id,
+          type: "execution",
+          severity: "medium",
+          timestamp: order.updated_date,
+          link: `${createPageUrl('NaasInstallation')}?siteId=${order.facility_id}&section=execution`
+        });
+      }
+
+      // NaaS 4: Missing or Invalid Photos
+      if ((order.photo_count && order.photo_count < 2) || order.photo_validation === 'failed') {
+        alerts.push({
+          id: `naas-photo-${order.facility_id}`,
+          title: "Missing or invalid photos",
+          facility_id: order.facility_id,
+          type: "doc",
+          severity: "high",
+          timestamp: order.updated_date,
+          link: `${createPageUrl('NaasInstallation')}?siteId=${order.facility_id}&section=photo`
+        });
+      }
+
+      // NaaS 5: Configuration Issues
+      if (order.config_status === 'incomplete' || order.config_validation === 'failed') {
+        alerts.push({
+          id: `naas-config-${order.facility_id}`,
+          title: "Device configuration issue",
+          facility_id: order.facility_id,
+          type: "config",
+          severity: "high",
+          timestamp: order.updated_date,
+          link: `${createPageUrl('NaasInstallation')}?siteId=${order.facility_id}&section=config`
+        });
+      }
+
+      // NaaS 6: Activation Test Failures
+      if (order.activation_status === 'failed' || order.test_results === 'failed') {
+        alerts.push({
+          id: `naas-activation-${order.facility_id}`,
+          title: "Service activation failed",
+          facility_id: order.facility_id,
+          type: "activation",
+          severity: "high",
+          timestamp: order.updated_date,
+          link: `${createPageUrl('NaasInstallation')}?siteId=${order.facility_id}&section=activation`
+        });
+      }
     });
 
     // Sort by most recent first
