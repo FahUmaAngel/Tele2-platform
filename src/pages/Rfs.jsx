@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { 
-  ArrowLeft, 
-  CheckCircle2, 
-  Construction, 
-  Server, 
-  ShieldCheck, 
-  FileText, 
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Construction,
+  Server,
+  ShieldCheck,
+  FileText,
   Download,
   Share2,
   PlayCircle,
@@ -34,6 +34,7 @@ import CustomerAcceptance from '@/components/rfs/CustomerAcceptance';
 import InvoicingPanel from '@/components/rfs/InvoicingPanel';
 import WorkflowTimeline from '@/components/shared/WorkflowTimeline';
 import PageFilter from '@/components/shared/PageFilter';
+import ReplanButton from '@/components/ReplanButton';
 
 export default function Rfs() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -43,33 +44,39 @@ export default function Rfs() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("health");
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
-  const [pageFilters, setPageFilters] = useState({});
+  const [pageFilters, setPageFilters] = React.useState({});
+  const [replanNeeded, setReplanNeeded] = React.useState(false);
+
+  // Mock logic for replanNeeded
+  React.useEffect(() => {
+    // Logic to determine if replan is needed
+  }, []);
 
   useEffect(() => {
-      const fid = pageFilters.facility_id;
-      const oid = pageFilters.order_id;
-      
-      let nextUrl = createPageUrl('Rfs');
-      let params = new URLSearchParams();
-      let hasChanges = false;
+    const fid = pageFilters.facility_id;
+    const oid = pageFilters.order_id;
 
-      if (fid && fid !== 'all') {
-          params.set('siteId', fid);
-          if (fid !== siteId) hasChanges = true;
-      } else {
-          params.set('siteId', siteId);
-      }
+    let nextUrl = createPageUrl('Rfs');
+    let params = new URLSearchParams();
+    let hasChanges = false;
 
-      if (oid && oid !== 'all') {
-          params.set('orderId', oid);
-          if (oid !== orderId) hasChanges = true;
-      } else if (orderId) {
-          params.set('orderId', orderId);
-      }
+    if (fid && fid !== 'all') {
+      params.set('siteId', fid);
+      if (fid !== siteId) hasChanges = true;
+    } else {
+      params.set('siteId', siteId);
+    }
 
-      if (hasChanges) {
-          navigate(`${nextUrl}?${params.toString()}`);
-      }
+    if (oid && oid !== 'all') {
+      params.set('orderId', oid);
+      if (oid !== orderId) hasChanges = true;
+    } else if (orderId) {
+      params.set('orderId', orderId);
+    }
+
+    if (hasChanges) {
+      navigate(`${nextUrl}?${params.toString()}`);
+    }
   }, [pageFilters, siteId, orderId, navigate]);
 
   // --- Data Fetching ---
@@ -87,10 +94,10 @@ export default function Rfs() {
       const query = { facility_id: siteId };
       if (orderId) query.order_id = orderId;
       const orders = await base44.entities.FiberOrder.list(query);
-      return orders?.[0] || { 
-        client: "Unknown Client", 
-        address: "Unknown Address", 
-        municipality: "Unknown" 
+      return orders?.[0] || {
+        client: "Unknown Client",
+        address: "Unknown Address",
+        municipality: "Unknown"
       };
     }
   });
@@ -115,10 +122,10 @@ export default function Rfs() {
     // but let's save the score if it's the first time or significantly different
     // Always update report with latest health data
     createOrUpdateReport.mutate({
-        health_score: healthData.score,
-        anomalies_detected: healthData.anomalies,
-        predictive_failure_prob: healthData.probability,
-        kpi_metrics: healthData.kpis
+      health_score: healthData.score,
+      anomalies_detected: healthData.anomalies,
+      predictive_failure_prob: healthData.probability,
+      kpi_metrics: healthData.kpis
     });
   };
 
@@ -195,7 +202,7 @@ export default function Rfs() {
             </div>
             <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
               <span className="flex items-center gap-1">
-                 Order ID: <span className="font-semibold text-gray-900">{fiberOrder?.order_id || orderId || "N/A"}</span>
+                Order ID: <span className="font-semibold text-gray-900">{fiberOrder?.order_id || orderId || "N/A"}</span>
               </span>
               <span className="w-1 h-1 bg-gray-300 rounded-full" />
               <span className="flex items-center gap-1">
@@ -205,22 +212,31 @@ export default function Rfs() {
           </div>
 
           <div className="flex gap-3">
-             <Link to={createPageUrl('NaasInstallation') + `?siteId=${siteId}&orderId=${orderId || fiberOrder?.order_id || ''}`}>
-                <Button variant="outline" className="bg-white">
-                  <ArrowLeft className="w-4 h-4 mr-2" /> Back to Installation
-                </Button>
-             </Link>
-             <Button variant="outline" className="bg-white">
-               <Share2 className="w-4 h-4 mr-2" /> Share Report
-             </Button>
-             <Button 
-               className={`${rfsReport?.rfs_status === 'completed' ? 'bg-gray-100 text-gray-400' : 'bg-[#0a1f33] hover:bg-[#153250]'}`}
-               disabled={!isRfsReady || rfsReport?.rfs_status === 'completed'}
-               onClick={handleCompleteRfs}
-             >
-               <PlayCircle className="w-4 h-4 mr-2" /> 
-               {rfsReport?.rfs_status === 'completed' ? "RFS Completed" : "Finalize RFS"}
-             </Button>
+            <ReplanButton
+              siteId={siteId}
+              orderId={orderId}
+              currentStep={7}
+              variant={replanNeeded ? "destructive" : "outline"}
+              className={replanNeeded ? "animate-pulse shadow-md" : ""}
+            >
+              {replanNeeded ? "Replanning Required" : "AI Replan"}
+            </ReplanButton>
+            <Link to={createPageUrl('NaasInstallation') + `?siteId=${siteId}&orderId=${orderId || fiberOrder?.order_id || ''}`}>
+              <Button variant="outline" className="bg-white">
+                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Installation
+              </Button>
+            </Link>
+            <Button variant="outline" className="bg-white">
+              <Share2 className="w-4 h-4 mr-2" /> Share Report
+            </Button>
+            <Button
+              className={`${rfsReport?.rfs_status === 'completed' ? 'bg-gray-100 text-gray-400' : 'bg-[#0a1f33] hover:bg-[#153250]'}`}
+              disabled={!isRfsReady || rfsReport?.rfs_status === 'completed'}
+              onClick={handleCompleteRfs}
+            >
+              <PlayCircle className="w-4 h-4 mr-2" />
+              {rfsReport?.rfs_status === 'completed' ? "RFS Completed" : "Finalize RFS"}
+            </Button>
           </div>
         </div>
       </div>
@@ -255,54 +271,54 @@ export default function Rfs() {
               </p>
             </div>
           </div>
-          
-          <NetworkHealthMonitor 
-            siteId={siteId} 
-            onHealthUpdate={handleHealthUpdate} 
+
+          <NetworkHealthMonitor
+            siteId={siteId}
+            onHealthUpdate={handleHealthUpdate}
           />
         </TabsContent>
 
         <TabsContent value="acceptance" className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-           <div className="grid md:grid-cols-3 gap-8">
-             <div className="md:col-span-2 space-y-6">
-               <CustomerAcceptance 
-                 onSignOff={handleSignOff} 
-                 isSigned={!!rfsReport?.customer_signature}
-                 signedData={rfsReport}
-               />
-             </div>
-             <div className="space-y-6">
-               <div className="bg-gray-50 p-6 rounded-xl border border-gray-100">
-                 <h3 className="font-semibold mb-4">Pre-Acceptance Checklist</h3>
-                 <ul className="space-y-3">
-                   {[
-                     { label: "Physical Installation Verified", done: true },
-                     { label: "Power & Cooling Tests", done: true },
-                     { label: "Network Health Score > 90", done: (rfsReport?.health_score || 0) > 90 },
-                     { label: "Failover Redundancy Test", done: true },
-                     { label: "Port Configuration Audit", done: true }
-                   ].map((item, i) => (
-                     <li key={i} className="flex items-center gap-3 text-sm">
-                       <div className={`w-5 h-5 rounded-full flex items-center justify-center ${item.done ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-400'}`}>
-                         <CheckCircle2 className="w-3 h-3" />
-                       </div>
-                       <span className={item.done ? 'text-gray-900' : 'text-gray-500'}>{item.label}</span>
-                     </li>
-                   ))}
-                 </ul>
-               </div>
-             </div>
-           </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="md:col-span-2 space-y-6">
+              <CustomerAcceptance
+                onSignOff={handleSignOff}
+                isSigned={!!rfsReport?.customer_signature}
+                signedData={rfsReport}
+              />
+            </div>
+            <div className="space-y-6">
+              <div className="bg-gray-50 p-6 rounded-xl border border-gray-100">
+                <h3 className="font-semibold mb-4">Pre-Acceptance Checklist</h3>
+                <ul className="space-y-3">
+                  {[
+                    { label: "Physical Installation Verified", done: true },
+                    { label: "Power & Cooling Tests", done: true },
+                    { label: "Network Health Score > 90", done: (rfsReport?.health_score || 0) > 90 },
+                    { label: "Failover Redundancy Test", done: true },
+                    { label: "Port Configuration Audit", done: true }
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-center gap-3 text-sm">
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center ${item.done ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-400'}`}>
+                        <CheckCircle2 className="w-3 h-3" />
+                      </div>
+                      <span className={item.done ? 'text-gray-900' : 'text-gray-500'}>{item.label}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="invoice" className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
           <div className="grid md:grid-cols-2 gap-8">
-            <InvoicingPanel 
-              status={rfsReport?.invoice_status} 
+            <InvoicingPanel
+              status={rfsReport?.invoice_status}
               onGenerateInvoice={handleGenerateInvoice}
               rfsReady={!!rfsReport?.customer_signature}
             />
-            
+
             <div className="space-y-6">
               <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                 <h3 className="font-semibold mb-4">Completion Summary</h3>
