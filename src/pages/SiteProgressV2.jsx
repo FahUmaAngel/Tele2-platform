@@ -140,6 +140,8 @@ export default function SiteProgressV2() {
             const priorities = ['High', 'Medium', 'Low'];
             const priority = priorities[Math.floor(Math.random() * priorities.length)];
 
+            const currentProgressDate = addDays(startDate, Math.floor((progress / 100) * totalDays));
+
             return {
                 id: order.facility_id,
                 name: order.address || `Site ${order.facility_id}`,
@@ -151,6 +153,7 @@ export default function SiteProgressV2() {
                 totalDays,
                 installDate,
                 startDate,
+                currentProgressDate,
                 raw: order
             };
         }).filter(site => {
@@ -452,11 +455,14 @@ export default function SiteProgressV2() {
                                                 const pos = getBarPosition(phase.start, phase.end);
                                                 if (!pos) return null; // Skip if off-screen
 
+                                                const isCompleted = phase.end < site.currentProgressDate;
+                                                const opacityClass = isCompleted ? 'opacity-40' : 'opacity-90 hover:opacity-100';
+
                                                 return (
                                                     <Popover key={idx}>
                                                         <PopoverTrigger asChild>
                                                             <div 
-                                                                className={`absolute h-4 rounded-sm ${phase.color} opacity-90 hover:opacity-100 transition-opacity cursor-pointer`}
+                                                                className={`absolute h-4 rounded-sm ${phase.color} ${opacityClass} transition-opacity cursor-pointer`}
                                                                 style={{ left: pos.left, width: pos.width }}
                                                             />
                                                         </PopoverTrigger>
@@ -471,6 +477,26 @@ export default function SiteProgressV2() {
                                                     </Popover>
                                                 );
                                             })}
+                                            
+                                            {/* Blue Progress Line */}
+                                            {(() => {
+                                                const progressPos = getBarPosition(site.currentProgressDate, site.currentProgressDate);
+                                                // getBarPosition returns width 0 for same start/end, so we need to calculate left manually or adjust getBarPosition
+                                                // Actually getBarPosition returns { left: '...', width: '...' }
+                                                // Let's just calculate left manually to be safe and simple
+                                                const progressDiff = differenceInDays(site.currentProgressDate, timelineStart);
+                                                const progressLeft = (progressDiff / timelineDays) * 100;
+                                                
+                                                if (progressLeft >= 0 && progressLeft <= 100) {
+                                                    return (
+                                                        <div 
+                                                            className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-30 shadow-[0_0_4px_rgba(59,130,246,0.5)]"
+                                                            style={{ left: `${progressLeft}%` }}
+                                                        />
+                                                    );
+                                                }
+                                                return null;
+                                            })()}
                                             
                                             {/* Red Hard Stop Line */}
                                             {installLeft >= 0 && installLeft <= 100 && (
@@ -541,7 +567,7 @@ export default function SiteProgressV2() {
                                                             <Popover>
                                                                 <PopoverTrigger asChild>
                                                                     <div 
-                                                                        className={`absolute top-1/2 -translate-y-1/2 h-5 rounded-md ${phase.color} cursor-pointer hover:opacity-90 transition-opacity`}
+                                                                        className={`absolute top-1/2 -translate-y-1/2 h-5 rounded-md ${phase.color} cursor-pointer ${phase.end < site.currentProgressDate ? 'opacity-40' : 'hover:opacity-90'} transition-opacity`}
                                                                         style={{ left: pos.left, width: pos.width }}
                                                                     />
                                                                 </PopoverTrigger>
@@ -555,6 +581,22 @@ export default function SiteProgressV2() {
                                                                 </PopoverContent>
                                                             </Popover>
                                                         )}
+                                                        
+                                                        {/* Blue Progress Line in Detailed View */}
+                                                        {(() => {
+                                                            const progressDiff = differenceInDays(site.currentProgressDate, timelineStart);
+                                                            const progressLeft = (progressDiff / timelineDays) * 100;
+                                                            
+                                                            if (progressLeft >= 0 && progressLeft <= 100) {
+                                                                return (
+                                                                    <div 
+                                                                        className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-30 shadow-[0_0_4px_rgba(59,130,246,0.5)]"
+                                                                        style={{ left: `${progressLeft}%` }}
+                                                                    />
+                                                                );
+                                                            }
+                                                            return null;
+                                                        })()}
                                                     </div>
 
                                                     {/* Right Info */}
