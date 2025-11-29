@@ -601,7 +601,7 @@ export default function SiteProgressV2() {
 
                                                     {/* Right Info */}
                                                     <div className="w-48 flex-shrink-0 flex items-center justify-end px-4 border-l border-gray-100 h-full text-xs text-gray-400">
-                                                        {phase.dayRange}
+                                                        {phase.duration}d
                                                     </div>
                                                 </div>
                                             );

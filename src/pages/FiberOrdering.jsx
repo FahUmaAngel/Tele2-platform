@@ -827,21 +827,30 @@ export default function FiberOrdering() {
                 open={isReplanOpen}
                 onOpenChange={setIsReplanOpen}
                 order={activeOrder}
-                onApplyPlan={(newPlan) => {
+                onApplyPlan={async (newPlan) => {
                     // Apply changes via mutation
                     if (activeOrder) {
-                        updateOrderMutation.mutate({
-                            id: activeOrder.id,
-                            data: {
-                                delivery_est_date: newPlan.deliveryDate,
-                                scheduled_date: null, // Clear invalid schedule
-                                subcontractor: newPlan.subcontractor,
-                                delay_risk: 'None',
-                                status: 'Planned', // Reset to planned
-                                notes: `${activeOrder.notes || ''}\n[AI Replan]: Rescheduled to ${newPlan.installWindow} due to constraints.`
-                            }
-                        });
-                        toast.success("New plan applied successfully");
+                        const toastId = toast.loading("Applying new plan...");
+                        try {
+                            await updateOrderMutation.mutateAsync({
+                                id: activeOrder.id,
+                                data: {
+                                    delivery_est_date: newPlan.deliveryDate,
+                                    scheduled_date: null, // Clear invalid schedule
+                                    subcontractor: newPlan.subcontractor,
+                                    delay_risk: 'None',
+                                    status: 'Planned', // Reset to planned
+                                    notes: `${activeOrder.notes || ''}\n[AI Replan]: Rescheduled to ${newPlan.installWindow} due to constraints.`
+                                }
+                            });
+                            toast.dismiss(toastId);
+                            toast.success("New plan applied successfully!");
+                            setIsReplanOpen(false);
+                        } catch (error) {
+                            toast.dismiss(toastId);
+                            toast.error("Failed to apply new plan. Please try again.");
+                            console.error("Replan error:", error);
+                        }
                     }
                 }}
             />

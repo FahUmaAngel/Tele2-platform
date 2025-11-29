@@ -1,10 +1,10 @@
 import React from 'react';
-import { 
-  CheckSquare, 
-  Camera, 
-  UploadCloud, 
-  Eye, 
-  CheckCircle2, 
+import {
+  CheckSquare,
+  Camera,
+  UploadCloud,
+  Eye,
+  CheckCircle2,
   AlertCircle,
   ExternalLink,
   Smartphone
@@ -32,6 +32,9 @@ import {
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
+import rackImg from '@/assets/rack_installation.jpg';
+import cablingImg from '@/assets/cabling_setup.jpg';
+
 export default function WorkExecution({ siteId }) {
   const [checklistItems, setChecklistItems] = React.useState([
     { id: 1, label: "Equipment received and verified against BOM", checked: true, description: "Check all serial numbers against the delivery note." },
@@ -43,7 +46,7 @@ export default function WorkExecution({ siteId }) {
   ]);
 
   const toggleItem = (id) => {
-    setChecklistItems(items => items.map(item => 
+    setChecklistItems(items => items.map(item =>
       item.id === id ? { ...item, checked: !item.checked } : item
     ));
   };
@@ -82,9 +85,9 @@ export default function WorkExecution({ siteId }) {
                     <div className="space-y-4">
                       {checklistItems.map((item) => (
                         <div key={item.id} className="flex items-start space-x-3 p-3 bg-white rounded-lg shadow-sm border border-gray-100">
-                          <Checkbox 
-                            id={`mobile-task-${item.id}`} 
-                            checked={item.checked} 
+                          <Checkbox
+                            id={`mobile-task-${item.id}`}
+                            checked={item.checked}
                             onCheckedChange={() => toggleItem(item.id)}
                           />
                           <div className="grid gap-1.5 leading-none">
@@ -116,13 +119,13 @@ export default function WorkExecution({ siteId }) {
             </div>
             <Progress value={progress} className="h-2" />
           </div>
-          
+
           <div className="space-y-3">
             {checklistItems.slice(0, 6).map((item) => (
               <div key={item.id} className="flex items-start space-x-3 p-2 rounded hover:bg-gray-50 transition-colors">
-                <Checkbox 
-                  id={`task-${item.id}`} 
-                  checked={item.checked} 
+                <Checkbox
+                  id={`task-${item.id}`}
+                  checked={item.checked}
                   onCheckedChange={() => toggleItem(item.id)}
                 />
                 <div className="grid gap-1.5 leading-none">
@@ -136,7 +139,7 @@ export default function WorkExecution({ siteId }) {
               </div>
             ))}
           </div>
-          
+
           <div className="mt-6 pt-4 border-t border-gray-100">
             <Dialog>
               <DialogTrigger asChild>
@@ -153,9 +156,9 @@ export default function WorkExecution({ siteId }) {
                   <div className="space-y-4">
                     {checklistItems.map((item) => (
                       <div key={item.id} className="flex items-start space-x-3 p-3 rounded-lg border border-gray-100 bg-gray-50/50">
-                        <Checkbox 
-                          id={`dialog-task-${item.id}`} 
-                          checked={item.checked} 
+                        <Checkbox
+                          id={`dialog-task-${item.id}`}
+                          checked={item.checked}
                           onCheckedChange={() => toggleItem(item.id)}
                           className="mt-1"
                         />
@@ -206,7 +209,7 @@ export default function WorkExecution({ siteId }) {
               <div className="text-xs font-semibold text-purple-900">AI Vision Analysis</div>
               <div className="text-xs text-purple-700 mt-0.5">
                 Last upload detected: <span className="font-medium">Cisco ISR 1100</span>.
-                <br/>
+                <br />
                 Status: <span className="text-green-600 font-medium">Correctly Mounted</span>.
               </div>
             </div>
@@ -217,7 +220,7 @@ export default function WorkExecution({ siteId }) {
             <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Recent Uploads</h4>
             <div className="grid grid-cols-2 gap-3">
               <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden group">
-                <img src="https://images.unsplash.com/photo-1558494949-ef526b0042a0?w=400&h=300&fit=crop" alt="Rack" className="object-cover w-full h-full" />
+                <img src={rackImg} alt="Rack" className="object-cover w-full h-full" />
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <Button size="sm" variant="secondary" className="h-7 text-xs">View</Button>
                 </div>
@@ -228,7 +231,7 @@ export default function WorkExecution({ siteId }) {
                 </div>
               </div>
               <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden group">
-                <img src="https://images.unsplash.com/photo-1544197150-b99a580bb7f8?w=400&h=300&fit=crop" alt="Cabling" className="object-cover w-full h-full" />
+                <img src={cablingImg} alt="Cabling" className="object-cover w-full h-full" />
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <Button size="sm" variant="secondary" className="h-7 text-xs">View</Button>
                 </div>

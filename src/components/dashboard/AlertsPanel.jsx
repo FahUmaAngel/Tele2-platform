@@ -26,68 +26,56 @@ export default function AlertsPanel() {
     const alerts = [];
 
     orders.forEach(order => {
-      // Fiber Delivery Delayed - check for "Delayed" status or "Delayed" delay_risk
+      // Problem 1: Rescheduling
       if (order.status === 'Delayed' || order.delay_risk === 'Delayed') {
         alerts.push({
-          id: `delay-${order.facility_id}`,
-          title: "Fiber Delivery Delayed",
-          facility_id: order.facility_id,
-          type: "delay",
-          severity: "high",
-          timestamp: order.updated_date,
-          order
-        });
-      }
-
-      // Frost Constraint Conflict - check frost_constraint field
-      if (order.frost_constraint && order.frost_constraint !== 'None') {
-        alerts.push({
-          id: `frost-${order.facility_id}`,
-          title: "Frost Constraint Conflict",
+          id: `reschedule-${order.facility_id}`,
+          title: "Rescheduling",
           facility_id: order.facility_id,
           type: "schedule",
-          severity: "medium",
+          severity: "high",
           timestamp: order.updated_date,
-          order
+          link: `${createPageUrl('FiberOrdering')}?siteId=${order.facility_id}`
         });
       }
 
-      // Missing Site Photos - check geocoding_status
+      // Problem 2: Missing photos
       if (order.geocoding_status === 'failed' || order.geocoding_status === 'pending') {
         alerts.push({
           id: `photos-${order.facility_id}`,
-          title: "Missing Site Photos",
+          title: "Missing photos",
           facility_id: order.facility_id,
           type: "doc",
-          severity: "low",
-          timestamp: order.updated_date,
-          order
-        });
-      }
-
-      // Installation Failed QC - check for "Blocked" status
-      if (order.status === 'Blocked') {
-        alerts.push({
-          id: `qc-${order.facility_id}`,
-          title: "Installation Failed QC",
-          facility_id: order.facility_id,
-          type: "quality",
-          severity: "high",
-          timestamp: order.updated_date,
-          order
-        });
-      }
-
-      // Subcontractor Capacity - check for "At risk" delay_risk
-      if (order.delay_risk === 'At risk') {
-        alerts.push({
-          id: `capacity-${order.facility_id}`,
-          title: "Subcontractor Capacity",
-          facility_id: order.facility_id,
-          type: "resource",
           severity: "medium",
           timestamp: order.updated_date,
-          order
+          link: `${createPageUrl('NaasInstallation')}?siteId=${order.facility_id}`
+        });
+      }
+
+      // Problem 3: Technician can't reach customer
+      // Checking for access issues
+      if (order.access_status === 'No Access' || order.status === 'Access Issue') {
+        alerts.push({
+          id: `access-${order.facility_id}`,
+          title: "Technician can't reach customer",
+          facility_id: order.facility_id,
+          type: "access",
+          severity: "high",
+          timestamp: order.updated_date,
+          link: `${createPageUrl('SiteSurvey')}?siteId=${order.facility_id}`
+        });
+      }
+
+      // Problem 4: Client hasn't approved the job
+      if (order.rfs_status === 'pending_approval') {
+        alerts.push({
+          id: `approval-${order.facility_id}`,
+          title: "Client hasn't approved the job",
+          facility_id: order.facility_id,
+          type: "approval",
+          severity: "medium",
+          timestamp: order.updated_date,
+          link: `${createPageUrl('Rfs')}?siteId=${order.facility_id}&tab=acceptance`
         });
       }
     });
@@ -111,8 +99,8 @@ export default function AlertsPanel() {
   };
 
   // Navigate to specific site
-  const handleViewSite = (facilityId) => {
-    navigate(`${createPageUrl('FiberOrdering')}?siteId=${facilityId}`);
+  const handleViewSite = (link) => {
+    navigate(link);
   };
 
   // Get all alert facility IDs for filtering
@@ -187,7 +175,7 @@ export default function AlertsPanel() {
                   variant="ghost"
                   size="icon"
                   className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8"
-                  onClick={() => handleViewSite(alert.facility_id)}
+                  onClick={() => handleViewSite(alert.link)}
                   title={`View ${alert.facility_id}`}
                 >
                   <Eye className="w-4 h-4 text-gray-500" />

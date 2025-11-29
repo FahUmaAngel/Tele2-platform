@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-    Dialog, 
-    DialogContent, 
-    DialogHeader, 
-    DialogTitle, 
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
     DialogDescription,
-    DialogFooter 
+    DialogFooter
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +36,7 @@ export default function AIReplanningModal({ open, onOpenChange, order, onApplyPl
             const interval = setInterval(() => {
                 currentStep++;
                 setAnalysisStep(currentStep);
-                
+
                 if (currentStep >= steps.length) {
                     clearInterval(interval);
                     generateNewPlan(order);
@@ -51,18 +51,18 @@ export default function AIReplanningModal({ open, onOpenChange, order, onApplyPl
         // Mock AI Logic
         // 1. Calculate new dates to avoid frost (assuming frost is Nov 15 - Mar 31)
         // 2. Find new subcontractor if current one is overloaded (randomly decided here)
-        
+
         const today = new Date();
         const currentDelivery = currentOrder.delivery_est_date ? new Date(currentOrder.delivery_est_date) : today;
-        
+
         // Simulate a push-out of 14 days due to "delay"
         const newDeliveryDate = addDays(currentDelivery, 14);
-        
+
         // Simulate finding a frost-safe window
         // For demo purposes, let's just say it pushes installation to April if currently in winter
         let newInstallWindowStart = addDays(newDeliveryDate, 5);
         const month = newInstallWindowStart.getMonth(); // 0-11
-        
+
         let frostWarning = false;
         // If Nov(10) to Mar(2), push to April 1st
         if (month >= 10 || month <= 2) {
@@ -86,10 +86,9 @@ export default function AIReplanningModal({ open, onOpenChange, order, onApplyPl
         setIsAnalyzing(false);
     };
 
-    const handleApply = () => {
+    const handleApply = async () => {
         if (onApplyPlan && newPlan) {
-            onApplyPlan(newPlan);
-            onOpenChange(false);
+            await onApplyPlan(newPlan);
         }
     };
 
@@ -127,7 +126,7 @@ export default function AIReplanningModal({ open, onOpenChange, order, onApplyPl
                                 </p>
                             </div>
                             <div className="w-64 h-2 bg-gray-100 rounded-full overflow-hidden">
-                                <div 
+                                <div
                                     className="h-full bg-indigo-600 transition-all duration-500 ease-out"
                                     style={{ width: `${(analysisStep / steps.length) * 100}%` }}
                                 />
@@ -143,7 +142,7 @@ export default function AIReplanningModal({ open, onOpenChange, order, onApplyPl
                                         <h4 className="font-semibold text-gray-700">Current Plan (At Risk)</h4>
                                         <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Conflict Detected</Badge>
                                     </div>
-                                    
+
                                     <div className="space-y-3 text-sm">
                                         <div className="flex items-center justify-between">
                                             <span className="text-gray-500 flex items-center gap-2">
@@ -188,7 +187,7 @@ export default function AIReplanningModal({ open, onOpenChange, order, onApplyPl
                                         <h4 className="font-semibold text-indigo-900">Optimized Plan</h4>
                                         <Badge className="bg-green-100 text-green-700 border-green-200 hover:bg-green-100">Frost Safe</Badge>
                                     </div>
-                                    
+
                                     <div className="space-y-3 text-sm">
                                         <div className="flex items-center justify-between">
                                             <span className="text-indigo-700/70 flex items-center gap-2">
@@ -230,8 +229,8 @@ export default function AIReplanningModal({ open, onOpenChange, order, onApplyPl
                                 <div className="text-sm text-blue-900">
                                     <p className="font-medium">Why this plan?</p>
                                     <p className="opacity-90 mt-1">
-                                        Current schedule overlaps with municipality frost constraints (Nov 15 - Mar 31). 
-                                        The AI has shifted installation to the first available safe window in Spring and reassigned 
+                                        Current schedule overlaps with municipality frost constraints (Nov 15 - Mar 31).
+                                        The AI has shifted installation to the first available safe window in Spring and reassigned
                                         resources to optimize for the new timeline.
                                     </p>
                                 </div>
@@ -244,8 +243,8 @@ export default function AIReplanningModal({ open, onOpenChange, order, onApplyPl
                     <Button variant="outline" onClick={() => onOpenChange(false)}>
                         Keep Current Plan
                     </Button>
-                    <Button 
-                        onClick={handleApply} 
+                    <Button
+                        onClick={handleApply}
                         disabled={isAnalyzing}
                         className="bg-indigo-600 hover:bg-indigo-700 min-w-[140px]"
                     >
