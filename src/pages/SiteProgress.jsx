@@ -30,6 +30,17 @@ export default function SiteProgress() {
     const [page, setPage] = useState(1);
     const pageSize = 20;
     const [currentDate, setCurrentDate] = useState(new Date());
+    const [expandedRows, setExpandedRows] = useState(new Set());
+
+    const toggleRow = (id) => {
+        const newExpanded = new Set(expandedRows);
+        if (newExpanded.has(id)) {
+            newExpanded.delete(id);
+        } else {
+            newExpanded.add(id);
+        }
+        setExpandedRows(newExpanded);
+    };
 
     const { data: fiberOrders } = useQuery({
         queryKey: ['fiber-orders-progress'],
@@ -43,7 +54,14 @@ export default function SiteProgress() {
         return fiberOrders.map(order => {
             // Base start date
             const startDate = safeDate(order.project_start_date) || safeDate(order.created_date) || new Date();
-            const deliveryDate = safeDate(order.delivery_conf_date) || safeDate(order.delivery_est_date) || addDays(startDate, 20);
+            
+            // Calculate delivery date with a reasonable cap (max 30 days from start)
+            let deliveryDate = safeDate(order.delivery_conf_date) || safeDate(order.delivery_est_date) || addDays(startDate, 20);
+            const maxDeliveryDate = addDays(startDate, 30);
+            if (deliveryDate > maxDeliveryDate) {
+                deliveryDate = maxDeliveryDate;
+            }
+            
             const installDate = safeDate(order.scheduled_date) || addDays(deliveryDate, 5);
 
             // Calculate stage intervals (Mocking logic based on key dates)
@@ -68,19 +86,10 @@ export default function SiteProgress() {
                 start: designStart,
                 end: addDays(designStart, 5),
                 status: 'completed', // Mock
-                color: 'bg-yellow-500'
+                color: 'bg-orange-500'
             });
 
-            // 3. Survey
-            const surveyStart = addDays(startDate, 5);
-            stages.push({
-                id: 'site_survey',
-                name: 'Survey',
-                start: surveyStart,
-                end: addDays(surveyStart, 3),
-                status: 'completed',
-                color: 'bg-purple-500'
-            });
+            // 3. Survey - REMOVED
 
             // 4. Installation
             stages.push({
@@ -108,7 +117,9 @@ export default function SiteProgress() {
                 name: order.address || order.facility_id,
                 client: order.client,
                 status: order.status,
-                stages
+                stages,
+                endDate: deliveryDate, // Using deliveryDate as the hard stop
+                raw: order
             };
         }).filter(site => {
             const f = pageFilters;
@@ -138,7 +149,8 @@ export default function SiteProgress() {
 
 
     // --- Timeline Calculations ---
-    const timelineStart = startOfWeek(currentDate);
+    const timelineStart = new Date(); // Start from today
+    timelineStart.setHours(0, 0, 0, 0); // Reset to start of day
     const timelineDays = 30; // Show 30 days window
     const timelineEnd = addDays(timelineStart, timelineDays);
     const days = eachDayOfInterval({ start: timelineStart, end: timelineEnd });
@@ -211,7 +223,7 @@ export default function SiteProgress() {
                 
                 <div className="flex justify-end gap-4 text-xs text-gray-500">
                     <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-blue-500"/> Ordering</div>
-                    <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-yellow-500"/> Design</div>
+                    <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-orange-500"/> Design</div>
                     <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-green-500"/> Installation</div>
                 </div>
             </div>
@@ -246,52 +258,125 @@ export default function SiteProgress() {
                             </div>
                         )}
 
-                        {paginatedSites.map(site => (
-                           <div key={`row-${site.id}`} className="flex border-b border-gray-100 h-16 relative group">
-                                {/* Fixed Left Column */}
-                                <div className="w-[250px] flex-shrink-0 p-3 border-r border-gray-200 bg-white sticky left-0 z-20 group-hover:bg-gray-50 transition-colors flex flex-col justify-center">
-                                    <div className="font-medium text-sm text-gray-900 truncate">{site.name}</div>
-                                    <div className="text-xs text-gray-500 truncate">{site.id}</div>
-                                </div>
-
-                                {/* Scrollable Right Side */}
-                                <div className="flex-1 relative min-w-0" style={{ display: 'grid', gridTemplateColumns: `repeat(${timelineDays}, 1fr)` }}>
-                                    {/* Background Grid */}
-                                    {days.map((day, i) => (
-                                        <div key={`grid-${i}`} className={`border-r border-gray-100 h-full ${isWeekend(day) ? 'bg-gray-50/50' : ''} ${isSameDay(day, new Date()) ? 'bg-blue-50/30' : ''}`} />
-                                    ))}
-
-                                    {/* Bars Overlay */}
-                                    <div className="absolute inset-y-0 left-0 right-0 py-4 pointer-events-none grid" style={{ gridTemplateColumns: `repeat(${timelineDays}, 1fr)` }}>
-                                        {site.stages.map((stage, idx) => {
-                                            const style = getStageStyle(stage);
-                                            if (!style) return null;
-
-                                            // Adjust for 0-based grid in this inner container (no sidebar col)
-                                            const colStart = parseInt(style.gridColumnStart) - 1; // Sidebar was col 1, date 1 was col 2. Here date 1 is col 1.
-                                            const newStyle = {
-                                                gridColumnStart: colStart,
-                                                gridColumnEnd: style.gridColumnEnd
-                                            };
-
-                                            return (
-                                                <div 
-                                                    key={idx}
-                                                    style={newStyle}
-                                                    className={`${stage.color} h-full rounded-full opacity-80 shadow-sm border border-white/20 relative group/bar pointer-events-auto hover:opacity-100 transition-opacity mx-0.5`}
+                        {paginatedSites.map(site => {
+                            const isExpanded = expandedRows.has(site.id);
+                            
+                            return (
+                                <React.Fragment key={`row-${site.id}`}>
+                                    <div className="flex border-b border-gray-100 h-16 relative group hover:bg-gray-50 transition-colors">
+                                            {/* Fixed Left Column */}
+                                            <div className="w-[250px] flex-shrink-0 p-3 border-r border-gray-200 bg-white sticky left-0 z-20 group-hover:bg-gray-50 transition-colors flex items-center gap-2">
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="icon" 
+                                                    className="h-6 w-6 shrink-0"
+                                                    onClick={() => toggleRow(site.id)}
                                                 >
-                                                    {/* Tooltip */}
-                                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/bar:block bg-gray-900 text-white text-xs p-2 rounded shadow-lg z-30 whitespace-nowrap">
-                                                        <div className="font-bold">{stage.name}</div>
-                                                        <div>{format(stage.start, 'MMM d')} - {format(stage.end, 'MMM d')}</div>
+                                                    {isExpanded ? <ChevronRight className="h-4 w-4 rotate-90 transition-transform" /> : <ChevronRight className="h-4 w-4 transition-transform" />}
+                                                </Button>
+                                                <div className="min-w-0">
+                                                    <div className="font-medium text-sm text-gray-900 truncate">{site.name}</div>
+                                                    <div className="text-xs text-gray-500 truncate">{site.id}</div>
+                                                </div>
+                                            </div>
+
+                                            {/* Scrollable Right Side */}
+                                            <div className="flex-1 relative min-w-0" style={{ display: 'grid', gridTemplateColumns: `repeat(${timelineDays}, 1fr)` }}>
+                                                {/* Background Grid */}
+                                                {days.map((day, i) => (
+                                                    <div key={`grid-${i}`} className={`border-r border-gray-100 h-full ${isWeekend(day) ? 'bg-gray-50/50' : ''} ${isSameDay(day, new Date()) ? 'bg-blue-50/30' : ''}`} />
+                                                ))}
+
+                                                {/* Bars Overlay */}
+                                                <div className="absolute inset-y-0 left-0 right-0 py-4 pointer-events-none grid" style={{ gridTemplateColumns: `repeat(${timelineDays}, 1fr)` }}>
+                                                    {site.stages.map((stage, idx) => {
+                                                        const style = getStageStyle(stage);
+                                                        if (!style) return null;
+
+                                                        // Adjust for 0-based grid in this inner container (no sidebar col)
+                                                        const colStart = parseInt(style.gridColumnStart) - 1; // Sidebar was col 1, date 1 was col 2. Here date 1 is col 1.
+                                                        const newStyle = {
+                                                            gridColumnStart: colStart,
+                                                            gridColumnEnd: style.gridColumnEnd
+                                                        };
+
+                                                        return (
+                                                            <div 
+                                                                key={idx}
+                                                                style={newStyle}
+                                                                className={`${stage.color} h-full rounded-full opacity-80 shadow-sm border border-white/20 relative group/bar pointer-events-auto hover:opacity-100 transition-opacity mx-0.5`}
+                                                            >
+                                                                {/* Tooltip */}
+                                                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/bar:block bg-gray-900 text-white text-xs p-2 rounded shadow-lg z-30 whitespace-nowrap">
+                                                                    <div className="font-bold">{stage.name}</div>
+                                                                    <div>{format(stage.start, 'MMM d')} - {format(stage.end, 'MMM d')}</div>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+
+                                                    {/* Hard Stop Line */}
+                                                    {(() => {
+                                                        const endDiff = differenceInDays(site.endDate, timelineStart);
+                                                        if (endDiff >= 0 && endDiff < timelineDays) {
+                                                            return (
+                                                                <div 
+                                                                    className="absolute top-0 bottom-0 border-l-2 border-red-500 z-40"
+                                                                    style={{ 
+                                                                        left: `${(endDiff / timelineDays) * 100}%`
+                                                                    }}
+                                                                >
+                                                                    <div className="absolute top-0 -translate-x-1/2 -translate-y-full text-[10px] font-bold text-red-600 bg-white px-1 rounded border border-red-200 shadow-sm">
+                                                                        End
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        }
+                                                        return null;
+                                                    })()}
+                                                </div>
+                                            </div>
+                                    </div>
+
+                                    {/* Expanded Details Row */}
+                                    {isExpanded && (
+                                        <div className="bg-gray-50 border-b border-gray-200 p-4 pl-[260px]">
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                                <div>
+                                                    <h4 className="font-semibold text-sm text-gray-900 mb-2">Project Details</h4>
+                                                    <dl className="space-y-1 text-xs text-gray-600">
+                                                        <div className="flex justify-between"><dt>Client:</dt><dd className="font-medium">{site.client || 'N/A'}</dd></div>
+                                                        <div className="flex justify-between"><dt>Status:</dt><dd className="font-medium">{site.status}</dd></div>
+                                                        <div className="flex justify-between"><dt>Facility ID:</dt><dd className="font-medium">{site.id}</dd></div>
+                                                    </dl>
+                                                </div>
+                                                <div className="col-span-2">
+                                                    <h4 className="font-semibold text-sm text-gray-900 mb-2">Workflow Stages</h4>
+                                                    <div className="grid grid-cols-3 gap-4">
+                                                        {site.stages.map((stage, idx) => (
+                                                            <div key={idx} className="bg-white p-2 rounded border border-gray-200 text-xs">
+                                                                <div className="font-medium text-gray-900 mb-1 flex items-center gap-2">
+                                                                    <div className={`w-2 h-2 rounded-full ${stage.color}`} />
+                                                                    {stage.name}
+                                                                </div>
+                                                                <div className="text-gray-500">
+                                                                    {format(stage.start, 'MMM d')} - {format(stage.end, 'MMM d')}
+                                                                </div>
+                                                                <div className="mt-1">
+                                                                    <Badge variant="outline" className="text-[10px] h-5 px-1">
+                                                                        {stage.status.replace('_', ' ')}
+                                                                    </Badge>
+                                                                </div>
+                                                            </div>
+                                                        ))}
                                                     </div>
                                                 </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                           </div> 
-                        ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </React.Fragment>
+                            );
+                        })}
 
                     </div>
                 </div>

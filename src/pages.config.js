@@ -16,7 +16,7 @@ import Contact from './pages/Contact';
 import CriticalDataStreams from './pages/CriticalDataStreams';
 import WorkflowPresentation from './pages/WorkflowPresentation';
 import SiteOverview from './pages/SiteOverview';
-import SiteProgress from './pages/SiteProgress';
+import SiteProgressV2 from './pages/SiteProgressV2';
 import __Layout from './Layout.jsx';
 
 
@@ -39,7 +39,7 @@ export const PAGES = {
     "CriticalDataStreams": CriticalDataStreams,
     "WorkflowPresentation": WorkflowPresentation,
     "SiteOverview": SiteOverview,
-    "SiteProgress": SiteProgress,
+    "SiteProgress": SiteProgressV2,
 }
 
 export const pagesConfig = {
