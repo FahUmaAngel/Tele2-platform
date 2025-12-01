@@ -1,0 +1,134 @@
+{
+    "collections": {
+        "orders": {
+            "description": "Core entity representing a customer order. Replaces FiberOrder.csv",
+            "documentStructure": {
+                "id": "ORD-2025-001",
+                "facilityId": "SITE-SE-01",
+                "client": {
+                    "name": "Ikea",
+                    "contact": "Lars Holm",
+                    "email": "lars.holm@ikea.com"
+                },
+                "status": "PLANNED",
+                "type": "FIBER",
+                "location": {
+                    "address": "Malmvägen 14",
+                    "city": "Kiruna",
+                    "coordinates": {
+                        "lat": 67.8557,
+                        "lng": 20.2253
+                    },
+                    "municipality": "Kiruna"
+                },
+                "dates": {
+                    "created": "2025-11-23T20:24:52Z",
+                    "updated": "2025-11-28T19:57:34Z",
+                    "deliveryEst": "2026-12-18",
+                    "deliveryConf": "2027-01-21"
+                },
+                "constraints": {
+                    "frostPeriod": "Oct 15 - May 20",
+                    "permitLeadTime": 20
+                },
+                "workflow": {
+                    "surveyId": "SURVEY-001",
+                    "designId": "DESIGN-001",
+                    "workOrderId": "WO-2025-001",
+                    "rfsId": "RFS-001"
+                }
+            }
+        },
+        "surveys": {
+            "description": "Site survey results. Replaces SiteSurvey.csv",
+            "documentStructure": {
+                "id": "SURVEY-001",
+                "orderId": "ORD-2025-001",
+                "facilityId": "SITE-SE-01",
+                "status": "COMPLETED",
+                "surveyor": "Pending",
+                "feasibility": "FEASIBLE",
+                "technicalDetails": {
+                    "installationType": "Underground (Trenching)",
+                    "requiresSpecialHardware": true,
+                    "requiresLift": false
+                },
+                "notes": ""
+            }
+        },
+        "designs": {
+            "description": "Network design and BOM. Replaces NetworkDesign.csv",
+            "documentStructure": {
+                "id": "DESIGN-001",
+                "orderId": "ORD-2025-001",
+                "status": "LOCKED",
+                "version": 1,
+                "bom": [
+                    {
+                        "category": "Hardware",
+                        "model": "Cisco ISR 1100",
+                        "quantity": 1,
+                        "unitPrice": 1200
+                    },
+                    {
+                        "category": "Hardware",
+                        "model": "Catalyst 9200 Switch",
+                        "quantity": 2,
+                        "unitPrice": 2500
+                    }
+                ],
+                "financials": {
+                    "hardwareTotal": 15900,
+                    "laborCost": 2385,
+                    "recurringMonthly": 795,
+                    "totalUpfront": 18285
+                },
+                "approvalHistory": [
+                    {
+                        "date": "2025-11-24T18:23:47.117Z",
+                        "action": "APPROVED",
+                        "user": "Amin (Manager)"
+                    }
+                ]
+            }
+        },
+        "workOrders": {
+            "description": "Installation work orders. Replaces WorkOrder.csv",
+            "documentStructure": {
+                "id": "WO-2025-001",
+                "orderId": "ORD-2025-001",
+                "facilityId": "SITE-SE-01",
+                "status": "SCHEDULED",
+                "technician": {
+                    "name": "Sven Svensson",
+                    "team": "Team Alpha"
+                },
+                "schedule": {
+                    "plannedDate": "2025-12-10",
+                    "completionDate": null
+                },
+                "notes": "Installation scheduled"
+            }
+        },
+        "rfsReports": {
+            "description": "Ready for Service reports. Replaces RfsReport.csv",
+            "documentStructure": {
+                "id": "RFS-001",
+                "orderId": "ORD-2025-001",
+                "facilityId": "SITE-SE-01",
+                "status": "COMPLETED",
+                "healthScore": 90,
+                "metrics": {
+                    "latency": 15.5,
+                    "throughput": 950.2,
+                    "jitter": 2.1
+                },
+                "anomalies": [],
+                "customerAcceptance": {
+                    "signedAt": "2025-11-24T10:23:53.378Z",
+                    "comments": "test teaaa"
+                }
+            }
+        }
+    }
+}
