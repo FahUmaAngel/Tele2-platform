@@ -133,6 +133,19 @@ function cleanup() {
         order.geocoding_status = 'success';
         order.geocoding_source = 'Mock Data';
 
+        // Populate requested missing fields
+        if (!order.scheduled_date) order.scheduled_date = generateDate(new Date(2025, 5, 1), new Date(2025, 8, 1));
+        if (!order.category) order.category = getRandomItem(['Standard', 'Complex', 'Express']);
+        if (!order.requirements) order.requirements = getRandomItem(['None', 'Permit Required', 'Traffic Control', 'Night Work']);
+        if (!order.special_hw_needed) order.special_hw_needed = getRandomItem(['None', 'Cisco Router', 'Fiber Switch', 'Media Converter']);
+        if (!order.lift_required) order.lift_required = Math.random() > 0.8 ? 'Yes' : 'No';
+        if (!order.install_type) order.install_type = getRandomItem(['Underground', 'Aerial', 'Indoor', 'Facade']);
+        if (!order.hw_lead_time) order.hw_lead_time = getRandomItem(['3 days', '1 week', '2 weeks', 'On Stock']);
+        if (!order.notes) order.notes = getRandomItem(['Standard installation.', 'Customer requested call before arrival.', 'Key code required for entry.', 'Beware of dog.']);
+
+        // Randomize delay_risk for all facilities as requested
+        order.delay_risk = getRandomItem(['None', 'Low', 'Medium', 'High', 'At risk']);
+
         validOrders.push(order);
     });
 
@@ -168,15 +181,18 @@ function syncSiteSurvey(orders) {
             client: order.client,
             order_id: order.order_id,
             address: order.address,
-            surveyor: existing?.surveyor || getRandomItem(['Sven Svensson', 'Lars Larsson', 'Karl Karlsson']),
+            surveyor: getRandomItem(['Sven Svensson', 'Lars Larsson', 'Karl Karlsson', 'Anna Björk', 'Erik Lind']),
             date: existing?.date || generateDate(new Date(2025, 0, 1), new Date(2025, 3, 1)),
-            feasibility: 'feasible',
+            feasibility: getRandomItem(['feasible', 'feasible', 'feasible', 'requires_modification', 'impossible']),
             requires_special_hardware: Math.random() > 0.8 ? 'true' : 'false',
             requires_lift: Math.random() > 0.9 ? 'true' : 'false',
             installation_type: Math.random() > 0.5 ? 'Underground (Existing Duct)' : 'Aerial/Facade',
             notes: existing?.notes || 'Survey completed successfully.',
             id: existing?.id || `SURVEY-${order.order_id}`,
             created_date: existing?.created_date || new Date().toISOString(),
+            updated_date: new Date().toISOString(),
+            created_by_id: '692342b679f2a6c498963a83',
+            created_by: 'nangfahmaproad@gmail.com',
             is_sample: 'false'
         };
     });
@@ -252,8 +268,8 @@ function syncRfsReport(orders) {
     const filePath = path.join(DATA_DIR, 'RfsReport.csv');
     const { headers, data: existingReports } = parseCSV(fs.readFileSync(filePath, 'utf-8'));
 
-    // Orders that are Completed
-    const relevantOrders = orders.filter(o => o.status === 'Completed' || o.status === 'RFS');
+    // Generate RFS reports for ALL facilities as requested (01-13)
+    const relevantOrders = orders;
 
     const newReports = relevantOrders.map(order => {
         const existing = existingReports.find(r => r.facility_id === order.facility_id);
@@ -274,6 +290,9 @@ function syncRfsReport(orders) {
             completion_date: existing?.completion_date || new Date().toISOString().split('T')[0],
             id: existing?.id || `RFS-${order.order_id}`,
             created_date: existing?.created_date || new Date().toISOString(),
+            updated_date: new Date().toISOString(),
+            created_by_id: '692342b679f2a6c498963a83',
+            created_by: 'nangfahmaproad@gmail.com',
             is_sample: 'false'
         };
     });

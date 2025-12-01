@@ -1,13 +1,13 @@
 facility_id,order_id,client,health_score,anomalies_detected,kpi_metrics,predictive_failure_prob,customer_signature,customer_comments,signed_at,invoice_status,rfs_status,completion_date,id,created_date,updated_date,created_by_id,created_by,is_sample
-SITE-SE-01,ORD-2025-01,Ikea,,,,,,,,,,,,,,,,
-SITE-SE-02,ORD-2025-02,Svea AB,,,,,,,,,,,,,,,,
-SITE-SE-03,ORD-2025-03,Ericsson,,,,,,,,,,,,,,,,
-SITE-SE-04,ORD-2025-04,SEB,,,,,,,,,,,,,,,,
-SITE-SE-05,ORD-2025-05,H&M,,,,,,,,,,,,,,,,
-SITE-SE-06,ORD-2025-06,King,91,[],{},0.05,Signed via DocuSign,Service working great.,2025-12-01T20:18:50.843Z,paid,ready,2025-12-01,RFS-ORD-2025-06,2025-12-01T20:18:50.843Z,,,,false
-SITE-SE-07,ORD-2025-07,Volvo,,,,,,,,,,,,,,,,
-SITE-SE-08,ORD-2025-08,Vattenfall,,,,,,,,,,,,,,,,
-SITE-SE-10,ORD-2025-09,Klarna AB,,,,,,,,,,,,,,,,
-SITE-SE-11,ORD-2025-10,Postnord,,,,,,,,,,,,,,,,
-SITE-SE-12,ORD-2025-11,Northvolt,,,,,,,,,,,,,,,,
-SITE-SE-13,ORD-2025-12,Scania,,,,,,,,,,,,,,,,
+SITE-SE-01,ORD-2025-01,Ikea,91,[],{},0.05,Signed via DocuSign,Service working great.,2025-12-01T21:30:05.253Z,paid,ready,2025-12-01,RFS-ORD-2025-01,2025-12-01T21:30:05.253Z,2025-12-01T21:30:05.253Z,692342b679f2a6c498963a83,nangfahmaproad@gmail.com,false
+SITE-SE-02,ORD-2025-02,Svea AB,90,[],{},0.05,Signed via DocuSign,Service working great.,2025-12-01T21:30:05.253Z,paid,ready,2025-12-01,RFS-ORD-2025-02,2025-12-01T21:30:05.253Z,2025-12-01T21:30:05.253Z,692342b679f2a6c498963a83,nangfahmaproad@gmail.com,false
+SITE-SE-03,ORD-2025-03,Ericsson,92,[],{},0.05,Signed via DocuSign,Service working great.,2025-12-01T21:30:05.253Z,paid,ready,2025-12-01,RFS-ORD-2025-03,2025-12-01T21:30:05.253Z,2025-12-01T21:30:05.253Z,692342b679f2a6c498963a83,nangfahmaproad@gmail.com,false
+SITE-SE-04,ORD-2025-04,SEB,97,[],{},0.05,Signed via DocuSign,Service working great.,2025-12-01T21:30:05.253Z,paid,ready,2025-12-01,RFS-ORD-2025-04,2025-12-01T21:30:05.253Z,2025-12-01T21:30:05.253Z,692342b679f2a6c498963a83,nangfahmaproad@gmail.com,false
+SITE-SE-05,ORD-2025-05,H&M,94,[],{},0.05,Signed via DocuSign,Service working great.,2025-12-01T21:30:05.253Z,paid,ready,2025-12-01,RFS-ORD-2025-05,2025-12-01T21:30:05.253Z,2025-12-01T21:30:05.253Z,692342b679f2a6c498963a83,nangfahmaproad@gmail.com,false
+SITE-SE-06,ORD-2025-06,King,91,[],{},0.05,Signed via DocuSign,Service working great.,2025-12-01T20:18:50.843Z,paid,ready,2025-12-01,RFS-ORD-2025-06,2025-12-01T20:18:50.843Z,2025-12-01T21:30:05.253Z,692342b679f2a6c498963a83,nangfahmaproad@gmail.com,false
+SITE-SE-07,ORD-2025-07,Volvo,96,[],{},0.05,Signed via DocuSign,Service working great.,2025-12-01T21:30:05.253Z,paid,ready,2025-12-01,RFS-ORD-2025-07,2025-12-01T21:30:05.253Z,2025-12-01T21:30:05.253Z,692342b679f2a6c498963a83,nangfahmaproad@gmail.com,false
+SITE-SE-08,ORD-2025-08,Vattenfall,90,[],{},0.05,Signed via DocuSign,Service working great.,2025-12-01T21:30:05.253Z,paid,ready,2025-12-01,RFS-ORD-2025-08,2025-12-01T21:30:05.253Z,2025-12-01T21:30:05.253Z,692342b679f2a6c498963a83,nangfahmaproad@gmail.com,false
+SITE-SE-09,ORD-2025-09,Klarna AB,96,[],{},0.05,Signed via DocuSign,Service working great.,2025-12-01T21:30:05.253Z,paid,ready,2025-12-01,RFS-ORD-2025-09,2025-12-01T21:30:05.253Z,2025-12-01T21:30:05.253Z,692342b679f2a6c498963a83,nangfahmaproad@gmail.com,false
+SITE-SE-10,ORD-2025-10,Postnord,96,[],{},0.05,Signed via DocuSign,Service working great.,2025-12-01T21:30:05.253Z,paid,ready,2025-12-01,RFS-ORD-2025-10,2025-12-01T21:30:05.253Z,2025-12-01T21:30:05.253Z,692342b679f2a6c498963a83,nangfahmaproad@gmail.com,false
+SITE-SE-11,ORD-2025-11,Northvolt,91,[],{},0.05,Signed via DocuSign,Service working great.,2025-12-01T21:30:05.253Z,paid,ready,2025-12-01,RFS-ORD-2025-11,2025-12-01T21:30:05.253Z,2025-12-01T21:30:05.253Z,692342b679f2a6c498963a83,nangfahmaproad@gmail.com,false
+SITE-SE-12,ORD-2025-12,Scania,99,[],{},0.05,Signed via DocuSign,Service working great.,2025-12-01T21:30:05.253Z,paid,ready,2025-12-01,RFS-ORD-2025-12,2025-12-01T21:30:05.253Z,2025-12-01T21:30:05.253Z,692342b679f2a6c498963a83,nangfahmaproad@gmail.com,false
