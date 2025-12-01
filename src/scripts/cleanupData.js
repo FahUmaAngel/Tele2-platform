@@ -127,6 +127,9 @@ function cleanup() {
         if (!order.service_type) order.service_type = 'fiber';
         if (!order.created_date) order.created_date = new Date().toISOString();
 
+        // Randomize status for all orders as requested
+        order.status = getRandomItem(['Planned', 'Confirming', 'Delivered', 'In Transit', 'pending', 'Completed', 'Delayed', 'processing']);
+
         // Fix Coordinates (Mock)
         if (!order.lat) order.lat = (59.3 + Math.random() * 0.5).toFixed(4);
         if (!order.lng) order.lng = (18.0 + Math.random() * 0.5).toFixed(4);
