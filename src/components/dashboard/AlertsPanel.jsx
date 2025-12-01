@@ -184,13 +184,27 @@ export default function AlertsPanel() {
       }
     });
 
-    // Sort by most recent first
-    return alerts.sort((a, b) =>
-      new Date(b.timestamp) - new Date(a.timestamp)
-    );
+    return alerts;
   };
 
-  const alerts = detectAlerts(orders);
+  const alerts = React.useMemo(() => {
+    const detected = detectAlerts(orders);
+
+    // 1. Sort by Severity (High > Medium > Low) then Date (Newest > Oldest)
+    const sorted = [...detected].sort((a, b) => {
+      const severityScore = { high: 3, medium: 2, low: 1 };
+      if (severityScore[b.severity] !== severityScore[a.severity]) {
+        return severityScore[b.severity] - severityScore[a.severity];
+      }
+      return new Date(b.timestamp) - new Date(a.timestamp);
+    });
+
+    // 2. Take Top 5
+    const top5 = sorted.slice(0, 5);
+
+    // 3. Shuffle (Randomize from top 5)
+    return top5.sort(() => 0.5 - Math.random());
+  }, [orders]);
 
   // Calculate time duration
   const getTimeDuration = (timestamp) => {
