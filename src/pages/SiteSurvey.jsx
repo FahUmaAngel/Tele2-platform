@@ -20,6 +20,12 @@ export default function SiteSurvey() {
   const [isNewSurveyOpen, setIsNewSurveyOpen] = useState(false);
   const [replanNeeded, setReplanNeeded] = useState(false);
 
+  // Mocking data since we might not have records yet, but using entity structure
+  const { data: surveys } = useQuery({
+    queryKey: ['site-surveys'],
+    queryFn: () => base44.entities.SiteSurvey.list()
+  });
+
   // Check for replan conditions (e.g. survey rejected or significant issues)
   useEffect(() => {
     if (surveys && surveys.length > 0) {
@@ -27,21 +33,16 @@ export default function SiteSurvey() {
       setReplanNeeded(hasIssues);
     }
   }, [surveys]);
-  const [pageFilters, setPageFilters] = React.useState({});
+
+  const [pageFilters, setPageFilters] = useState({});
   const navigate = useNavigate();
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fid = pageFilters.facility_id;
     if (fid && fid !== 'all' && fid !== siteId) {
       navigate(`${createPageUrl('SiteSurvey')}?siteId=${fid}`);
     }
   }, [pageFilters.facility_id, siteId, navigate]);
-
-  // Mocking data since we might not have records yet, but using entity structure
-  const { data: surveys } = useQuery({
-    queryKey: ['site-surveys'],
-    queryFn: () => base44.entities.SiteSurvey.list()
-  });
 
   const filteredSurveys = surveys?.filter(survey => {
     // 1. Context Filter (Site + Order)

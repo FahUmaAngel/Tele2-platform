@@ -60,6 +60,8 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
+      <Route path="/rfs" element={<LayoutWrapper currentPageName="rfs"><Pages.Rfs /></LayoutWrapper>} />
+      <Route path="/data" element={<LayoutWrapper currentPageName="data"><Pages.DataViewer /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

@@ -1,3 +1,4 @@
+import { lazy } from 'react';
 import Home from './pages/Home';
 import FiberOrdering from './pages/FiberOrdering';
 import UserManagement from './pages/UserManagement';
@@ -17,6 +18,7 @@ import CriticalDataStreams from './pages/CriticalDataStreams';
 import WorkflowPresentation from './pages/WorkflowPresentation';
 import SiteOverview from './pages/SiteOverview';
 import SiteProgressV2 from './pages/SiteProgressV2';
+import DataViewer from './pages/DataViewer';
 import __Layout from './Layout.jsx';
 
 
@@ -40,6 +42,7 @@ export const PAGES = {
     "WorkflowPresentation": WorkflowPresentation,
     "SiteOverview": SiteOverview,
     "SiteProgress": SiteProgressV2,
+    "DataViewer": DataViewer,
 }
 
 export const pagesConfig = {
