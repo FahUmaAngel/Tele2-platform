@@ -183,7 +183,7 @@ export default function NaasPreDesign() {
                 <ArrowLeft className="w-4 h-4 mr-2" /> Back to Fiber
               </Button>
             </Link>
-            <Link to={createPageUrl('SiteSurvey') + `?siteId=${siteId}`}>
+            <Link to={`${createPageUrl('SiteSurvey')}?siteId=${siteId}${orderIdParam ? `&orderId=${orderIdParam}` : ''}`}>
               <Button className="bg-[#0a1f33] hover:bg-[#153250]">
                 Proceed to Survey <ArrowRight className="w-4 h-4 ml-2" />
               </Button>

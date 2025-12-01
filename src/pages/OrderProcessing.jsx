@@ -110,6 +110,16 @@ export default function OrderProcessing() {
         }
     });
 
+    // Fetch Network Design to validate approval status
+    const { data: networkDesign } = useQuery({
+        queryKey: ['networkDesign', siteId, fiberOrder?.order_id],
+        enabled: !!fiberOrder?.order_id,
+        queryFn: async () => {
+            const res = await base44.entities.NetworkDesign.list({ order_id: fiberOrder.order_id });
+            return res?.[0] || null;
+        }
+    });
+
     // Navigation Logic
     const activeOrderId = fiberOrder?.order_id || orderIdParam;
     const currentOrderIndex = processingOrders?.findIndex(o => o.order_id === activeOrderId);
@@ -162,7 +172,13 @@ export default function OrderProcessing() {
         } else {
             if (!fiberOrder.delivery_conf_date) errors.push("Fiber delivery date is not confirmed.");
             if (fiberOrder.status === 'cancelled') errors.push("Fiber order is cancelled.");
-            // if (!fiberOrder.subcontractor) errors.push("No subcontractor assigned.");
+
+            // Validate Network Design Approval
+            if (!networkDesign) {
+                errors.push("No Network Design found for this order.");
+            } else if (networkDesign.status !== 'approved') {
+                errors.push(`Network Design is not approved (Current status: ${networkDesign.status}).`);
+            }
         }
 
         setValidationErrors(errors);

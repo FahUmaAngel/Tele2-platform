@@ -10,10 +10,13 @@ import SurveyCard from "@/components/site-survey/SurveyCard";
 import WorkflowTimeline from '@/components/shared/WorkflowTimeline';
 import PageFilter from '@/components/shared/PageFilter';
 import ReplanButton from '@/components/ReplanButton';
+import CreateSurveyDialog from "@/components/site-survey/CreateSurveyDialog";
 
 export default function SiteSurvey() {
   const urlParams = new URLSearchParams(window.location.search);
   const siteId = urlParams.get("siteId") || "";
+  const orderId = urlParams.get("orderId") || "";
+
   const [isNewSurveyOpen, setIsNewSurveyOpen] = useState(false);
   const [replanNeeded, setReplanNeeded] = useState(false);
 
@@ -38,6 +41,11 @@ export default function SiteSurvey() {
   });
 
   const filteredSurveys = surveys?.filter(survey => {
+    // 1. Context Filter (Site + Order)
+    if (siteId && survey.facility_id !== siteId) return false;
+    if (orderId && survey.order_id && survey.order_id !== orderId) return false;
+
+    // 2. Page Filters
     const f = pageFilters;
     if (f.facility_id && f.facility_id !== 'all' && !survey.facility_id?.toLowerCase().includes(f.facility_id.toLowerCase())) return false;
 
@@ -56,6 +64,7 @@ export default function SiteSurvey() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Site Survey & Documentation</h1>
           <p className="text-gray-500 mt-1">Field reports and technical feasibility studies.</p>
+          {orderId && <p className="text-xs text-blue-600 font-mono mt-1">Order Context: {orderId}</p>}
         </div>
         <div className="flex gap-3">
           <ReplanButton
@@ -66,7 +75,7 @@ export default function SiteSurvey() {
           >
             {replanNeeded ? "Replanning Required" : "AI Replan"}
           </ReplanButton>
-          <Button className="bg-[#0a1f33]">New Survey</Button>
+          <Button className="bg-[#0a1f33]" onClick={() => setIsNewSurveyOpen(true)}>New Survey</Button>
         </div>
       </div>
 
@@ -82,6 +91,7 @@ export default function SiteSurvey() {
             </div>
             <h3 className="text-lg font-medium text-gray-900">No Surveys Found</h3>
             <p className="text-gray-500 mt-1">Try adjusting your filters or create a new survey.</p>
+            <Button variant="outline" className="mt-4" onClick={() => setIsNewSurveyOpen(true)}>Create First Survey</Button>
           </Card>
         )}
 
@@ -89,6 +99,13 @@ export default function SiteSurvey() {
           <SurveyCard key={survey.id} survey={survey} />
         ))}
       </div>
+
+      <CreateSurveyDialog
+        open={isNewSurveyOpen}
+        onOpenChange={setIsNewSurveyOpen}
+        siteId={siteId}
+        orderId={orderId}
+      />
     </div>
   );
 }

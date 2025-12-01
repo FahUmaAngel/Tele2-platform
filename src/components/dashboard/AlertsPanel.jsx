@@ -32,6 +32,7 @@ export default function AlertsPanel() {
           id: `reschedule-${order.facility_id}`,
           title: "Rescheduling",
           facility_id: order.facility_id,
+          order_id: order.order_id,
           type: "schedule",
           severity: "high",
           timestamp: order.updated_date,
@@ -45,6 +46,7 @@ export default function AlertsPanel() {
           id: `photos-${order.facility_id}`,
           title: "Missing photos",
           facility_id: order.facility_id,
+          order_id: order.order_id,
           type: "doc",
           severity: "medium",
           timestamp: order.updated_date,
@@ -53,12 +55,12 @@ export default function AlertsPanel() {
       }
 
       // Problem 3: Technician can't reach customer
-      // Checking for access issues
       if (order.access_status === 'No Access' || order.status === 'Access Issue') {
         alerts.push({
           id: `access-${order.facility_id}`,
           title: "Technician can't reach customer",
           facility_id: order.facility_id,
+          order_id: order.order_id,
           type: "access",
           severity: "high",
           timestamp: order.updated_date,
@@ -72,8 +74,23 @@ export default function AlertsPanel() {
           id: `approval-${order.facility_id}`,
           title: "Client hasn't approved the job",
           facility_id: order.facility_id,
+          order_id: order.order_id,
           type: "approval",
           severity: "medium",
+          timestamp: order.updated_date,
+          link: `${createPageUrl('Rfs')}?siteId=${order.facility_id}&tab=acceptance`
+        });
+      }
+
+      // RFS: Installation not approved (AI Detected)
+      if (order.acceptanceStatus === 'PENDING') {
+        alerts.push({
+          id: `rfs-not-approved-${order.facility_id}`,
+          title: "Installation not approved",
+          facility_id: order.facility_id,
+          order_id: order.order_id,
+          type: "approval",
+          severity: "high",
           timestamp: order.updated_date,
           link: `${createPageUrl('Rfs')}?siteId=${order.facility_id}&tab=acceptance`
         });
@@ -88,6 +105,7 @@ export default function AlertsPanel() {
           id: `naas-technician-${order.facility_id}`,
           title: "Technician assignment issue",
           facility_id: order.facility_id,
+          order_id: order.order_id,
           type: "resource",
           severity: "high",
           timestamp: order.updated_date,
@@ -101,6 +119,7 @@ export default function AlertsPanel() {
           id: `naas-schedule-${order.facility_id}`,
           title: "Installation schedule conflict",
           facility_id: order.facility_id,
+          order_id: order.order_id,
           type: "schedule",
           severity: "high",
           timestamp: order.updated_date,
@@ -114,6 +133,7 @@ export default function AlertsPanel() {
           id: `naas-checklist-${order.facility_id}`,
           title: "Installation checklist incomplete",
           facility_id: order.facility_id,
+          order_id: order.order_id,
           type: "execution",
           severity: "medium",
           timestamp: order.updated_date,
@@ -127,6 +147,7 @@ export default function AlertsPanel() {
           id: `naas-photo-${order.facility_id}`,
           title: "Missing or invalid photos",
           facility_id: order.facility_id,
+          order_id: order.order_id,
           type: "doc",
           severity: "high",
           timestamp: order.updated_date,
@@ -140,6 +161,7 @@ export default function AlertsPanel() {
           id: `naas-config-${order.facility_id}`,
           title: "Device configuration issue",
           facility_id: order.facility_id,
+          order_id: order.order_id,
           type: "config",
           severity: "high",
           timestamp: order.updated_date,
@@ -153,6 +175,7 @@ export default function AlertsPanel() {
           id: `naas-activation-${order.facility_id}`,
           title: "Service activation failed",
           facility_id: order.facility_id,
+          order_id: order.order_id,
           type: "activation",
           severity: "high",
           timestamp: order.updated_date,
@@ -183,9 +206,6 @@ export default function AlertsPanel() {
   const handleViewSite = (link) => {
     navigate(link);
   };
-
-  // Get all alert facility IDs for filtering
-  const alertFacilityIds = [...new Set(alerts.map(a => a.facility_id))].join(',');
 
   const getIcon = (type) => {
     switch (type) {
@@ -247,6 +267,8 @@ export default function AlertsPanel() {
                     <h4 className="text-sm font-semibold text-gray-900">{alert.title}</h4>
                     <p className="text-xs text-gray-500 flex items-center gap-2">
                       <span className="font-mono">{alert.facility_id}</span>
+                      <span>•</span>
+                      <span className="font-mono">{alert.order_id || 'N/A'}</span>
                       <span>•</span>
                       <span>{getTimeDuration(alert.timestamp)}</span>
                     </p>
