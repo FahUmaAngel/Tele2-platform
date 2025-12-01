@@ -149,6 +149,21 @@ function cleanup() {
         // Randomize delay_risk for all facilities as requested
         order.delay_risk = getRandomItem(['None', 'Low', 'Medium', 'High', 'At risk']);
 
+        // Add alert-triggering fields for impressive demo (40% chance of issues)
+        const hasIssues = Math.random() > 0.6;
+        if (hasIssues) {
+            const issueType = Math.random();
+            if (issueType < 0.25) {
+                order.geocoding_status = getRandomItem(['failed', 'pending']);
+            } else if (issueType < 0.5) {
+                order.access_status = 'No Access';
+            } else if (issueType < 0.75) {
+                order.rfs_status = 'pending_approval';
+            } else {
+                order.acceptanceStatus = 'PENDING';
+            }
+        }
+
         validOrders.push(order);
     });
 

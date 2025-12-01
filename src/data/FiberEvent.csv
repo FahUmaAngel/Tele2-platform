@@ -1,0 +1,41 @@
+facility_id,order_id,event_type,event_status,description,timestamp,user,severity,id,created_date,is_sample
+SITE-SE-01,ORD-2025-01,order_created,completed,Fiber order created for Ikea,2025-11-23T10:15:00.000Z,Johan Nilsson,info,EVT-001,2025-11-23T10:15:00.000Z,false
+SITE-SE-01,ORD-2025-01,survey_scheduled,completed,Site survey scheduled for 2025-01-31,2025-11-24T09:30:00.000Z,Anna Björk,info,EVT-002,2025-11-24T09:30:00.000Z,false
+SITE-SE-01,ORD-2025-01,survey_completed,completed,Site survey completed - requires modification,2025-01-31T14:20:00.000Z,Anna Björk,warning,EVT-003,2025-01-31T14:20:00.000Z,false
+SITE-SE-01,ORD-2025-01,design_started,in_progress,Network design phase initiated,2025-02-05T08:00:00.000Z,Maria Larsson,info,EVT-004,2025-02-05T08:00:00.000Z,false
+SITE-SE-02,ORD-2025-02,order_created,completed,NaaS order created for Svea AB,2025-11-23T11:20:00.000Z,Maria Larsson,info,EVT-005,2025-11-23T11:20:00.000Z,false
+SITE-SE-02,ORD-2025-02,survey_scheduled,completed,Site survey scheduled for 2025-02-26,2025-11-25T10:00:00.000Z,Erik Lind,info,EVT-006,2025-11-25T10:00:00.000Z,false
+SITE-SE-02,ORD-2025-02,survey_completed,completed,Site survey completed - requires modification,2025-02-26T15:45:00.000Z,Erik Lind,warning,EVT-007,2025-02-26T15:45:00.000Z,false
+SITE-SE-02,ORD-2025-02,design_approved,completed,Network design approved by customer,2025-03-10T11:30:00.000Z,Maria Larsson,success,EVT-008,2025-03-10T11:30:00.000Z,false
+SITE-SE-03,ORD-2025-03,order_created,completed,Fiber order created for Ericsson,2025-11-23T12:45:00.000Z,Maria Larsson,info,EVT-009,2025-11-23T12:45:00.000Z,false
+SITE-SE-03,ORD-2025-03,survey_completed,completed,Site survey completed - feasible,2025-01-28T13:15:00.000Z,Karl Karlsson,success,EVT-010,2025-01-28T13:15:00.000Z,false
+SITE-SE-03,ORD-2025-03,design_approved,completed,Network design approved,2025-02-15T10:00:00.000Z,Maria Larsson,success,EVT-011,2025-02-15T10:00:00.000Z,false
+SITE-SE-03,ORD-2025-03,installation_started,completed,Installation work commenced,2025-03-01T08:00:00.000Z,Erik Eriksson,info,EVT-012,2025-03-01T08:00:00.000Z,false
+SITE-SE-04,ORD-2025-04,order_created,completed,Fiber order created for SEB,2025-11-23T13:30:00.000Z,Erik Johansson,info,EVT-013,2025-11-23T13:30:00.000Z,false
+SITE-SE-04,ORD-2025-04,survey_completed,completed,Site survey completed - feasible,2025-01-31T16:00:00.000Z,Erik Lind,success,EVT-014,2025-01-31T16:00:00.000Z,false
+SITE-SE-04,ORD-2025-04,permit_requested,pending,Building permit application submitted,2025-02-10T09:00:00.000Z,Erik Johansson,warning,EVT-015,2025-02-10T09:00:00.000Z,false
+SITE-SE-05,ORD-2025-05,order_created,completed,NaaS order created for H&M,2025-11-23T14:15:00.000Z,Erik Johansson,info,EVT-016,2025-11-23T14:15:00.000Z,false
+SITE-SE-05,ORD-2025-05,survey_completed,completed,Site survey completed - feasible,2025-03-15T12:30:00.000Z,Anna Björk,success,EVT-017,2025-03-15T12:30:00.000Z,false
+SITE-SE-05,ORD-2025-05,design_started,in_progress,Network design in progress,2025-03-20T08:00:00.000Z,Maria Larsson,info,EVT-018,2025-03-20T08:00:00.000Z,false
+SITE-SE-06,ORD-2025-06,order_created,completed,Fiber order created for King,2025-11-23T15:00:00.000Z,Johan Nilsson,info,EVT-019,2025-11-23T15:00:00.000Z,false
+SITE-SE-06,ORD-2025-06,survey_completed,completed,Site survey completed - feasible,2025-02-10T14:00:00.000Z,Sven Svensson,success,EVT-020,2025-02-10T14:00:00.000Z,false
+SITE-SE-06,ORD-2025-06,installation_completed,completed,Installation completed successfully,2025-04-15T17:00:00.000Z,Anna Andersson,success,EVT-021,2025-04-15T17:00:00.000Z,false
+SITE-SE-06,ORD-2025-06,rfs_completed,completed,Ready for Service - Customer signed off,2025-04-20T10:00:00.000Z,Johan Nilsson,success,EVT-022,2025-04-20T10:00:00.000Z,false
+SITE-SE-07,ORD-2025-07,order_created,completed,NaaS order created for Volvo,2025-11-23T16:00:00.000Z,Anna Karlsson,info,EVT-023,2025-11-23T16:00:00.000Z,false
+SITE-SE-07,ORD-2025-07,survey_completed,completed,Site survey completed - requires modification,2025-03-14T11:00:00.000Z,Sven Svensson,warning,EVT-024,2025-03-14T11:00:00.000Z,false
+SITE-SE-07,ORD-2025-07,traffic_control_requested,pending,Traffic control permit requested,2025-03-20T09:00:00.000Z,Anna Karlsson,warning,EVT-025,2025-03-20T09:00:00.000Z,false
+SITE-SE-08,ORD-2025-08,order_created,completed,Fiber order created for Vattenfall,2025-11-23T16:45:00.000Z,Johan Nilsson,info,EVT-026,2025-11-23T16:45:00.000Z,false
+SITE-SE-08,ORD-2025-08,survey_completed,completed,Site survey completed - requires modification,2025-01-14T15:30:00.000Z,Sven Svensson,warning,EVT-027,2025-01-14T15:30:00.000Z,false
+SITE-SE-08,ORD-2025-08,design_revision,in_progress,Design revision requested by customer,2025-02-01T10:00:00.000Z,Johan Nilsson,info,EVT-028,2025-02-01T10:00:00.000Z,false
+SITE-SE-09,ORD-2025-09,order_created,completed,NaaS order created for Klarna AB,2025-11-23T17:30:00.000Z,Anders Svensson,info,EVT-029,2025-11-23T17:30:00.000Z,false
+SITE-SE-09,ORD-2025-09,survey_completed,completed,Site survey completed - requires modification,2025-01-25T13:00:00.000Z,Anna Björk,warning,EVT-030,2025-01-25T13:00:00.000Z,false
+SITE-SE-09,ORD-2025-09,ai_replan_triggered,completed,AI replanning triggered due to constraints,2025-02-05T14:00:00.000Z,System,info,EVT-031,2025-02-05T14:00:00.000Z,false
+SITE-SE-10,ORD-2025-10,order_created,completed,Fiber order created for Postnord,2025-11-23T18:00:00.000Z,Erik Johansson,info,EVT-032,2025-11-23T18:00:00.000Z,false
+SITE-SE-10,ORD-2025-10,survey_completed,completed,Site survey completed - impossible,2025-01-01T12:00:00.000Z,Anna Björk,error,EVT-033,2025-01-01T12:00:00.000Z,false
+SITE-SE-10,ORD-2025-10,alternative_solution,in_progress,Exploring alternative installation methods,2025-01-10T09:00:00.000Z,Erik Johansson,warning,EVT-034,2025-01-10T09:00:00.000Z,false
+SITE-SE-11,ORD-2025-11,order_created,completed,Fiber order created for Northvolt,2025-11-23T18:30:00.000Z,Johan Nilsson,info,EVT-035,2025-11-23T18:30:00.000Z,false
+SITE-SE-11,ORD-2025-11,survey_completed,completed,Site survey completed - feasible,2025-03-10T14:30:00.000Z,Anna Björk,success,EVT-036,2025-03-10T14:30:00.000Z,false
+SITE-SE-11,ORD-2025-11,delay_reported,pending,Delivery delay due to hardware shortage,2025-04-01T10:00:00.000Z,Johan Nilsson,error,EVT-037,2025-04-01T10:00:00.000Z,false
+SITE-SE-12,ORD-2025-12,order_created,completed,NaaS order created for Scania,2025-11-23T19:00:00.000Z,Erik Johansson,info,EVT-038,2025-11-23T19:00:00.000Z,false
+SITE-SE-12,ORD-2025-12,survey_completed,completed,Site survey completed - impossible,2025-02-21T11:00:00.000Z,Sven Svensson,error,EVT-039,2025-02-21T11:00:00.000Z,false
+SITE-SE-12,ORD-2025-12,escalation,pending,Order escalated to senior management,2025-03-01T09:00:00.000Z,Erik Johansson,error,EVT-040,2025-03-01T09:00:00.000Z,false
