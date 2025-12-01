@@ -42,6 +42,7 @@ const menuItems = [
   { icon: User, label: "My Account", path: "MyAccount" },
   { icon: Phone, label: "Contact", path: "Contact" },
   { icon: Truck, label: "Supplier", path: "Supplier" },
+  { icon: Truck, label: "Integration Playground", path: "IntegrationPlayground" },
 ];
 
 export default function Sidebar({ isOpen, toggleSidebar }) {

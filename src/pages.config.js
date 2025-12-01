@@ -17,6 +17,7 @@ import CriticalDataStreams from './pages/CriticalDataStreams';
 import WorkflowPresentation from './pages/WorkflowPresentation';
 import SiteOverview from './pages/SiteOverview';
 import SiteProgressV2 from './pages/SiteProgressV2';
+import IntegrationPlayground from './pages/IntegrationPlayground';
 import __Layout from './Layout.jsx';
 
 
@@ -40,6 +41,7 @@ export const PAGES = {
     "WorkflowPresentation": WorkflowPresentation,
     "SiteOverview": SiteOverview,
     "SiteProgress": SiteProgressV2,
+    "IntegrationPlayground": IntegrationPlayground,
 }
 
 export const pagesConfig = {

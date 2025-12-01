@@ -1,0 +1,5 @@
+[
+  { "id": "ERP-001", "item": "Fiber Cable 100m", "stock": 500, "warehouse": "Stockholm-North" },
+  { "id": "ERP-002", "item": "Network Switch", "stock": 42, "warehouse": "Gothenburg-Central" },
+  { "id": "ERP-003", "item": "Router X1000", "stock": 15, "warehouse": "Malmo-South" }
+]

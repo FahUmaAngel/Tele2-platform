@@ -1,0 +1,5 @@
+[
+  { "empId": "HR-991", "name": "Alice Andersson", "role": "Field Technician", "status": "Active" },
+  { "empId": "HR-992", "name": "Bob Berg", "role": "Network Engineer", "status": "On Leave" },
+  { "empId": "HR-993", "name": "Charlie Ceder", "role": "Project Manager", "status": "Active" }
+]

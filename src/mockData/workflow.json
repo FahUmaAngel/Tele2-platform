@@ -1,0 +1,5 @@
+[
+  { "ticketId": "WF-5001", "process": "Site Survey", "assignedTo": "HR-991", "progress": "80%" },
+  { "ticketId": "WF-5002", "process": "Fiber Installation", "assignedTo": "HR-992", "progress": "20%" },
+  { "ticketId": "WF-5003", "process": "Quality Check", "assignedTo": "Unassigned", "progress": "0%" }
+]
