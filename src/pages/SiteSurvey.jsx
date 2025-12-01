@@ -20,10 +20,13 @@ export default function SiteSurvey() {
   const [isNewSurveyOpen, setIsNewSurveyOpen] = useState(false);
   const [replanNeeded, setReplanNeeded] = useState(false);
 
-  // Mock logic for replanNeeded
+  // Check for replan conditions (e.g. survey rejected or significant issues)
   useEffect(() => {
-    // Logic to determine if replan is needed
-  }, []);
+    if (surveys && surveys.length > 0) {
+      const hasIssues = surveys.some(s => s.status === 'rejected' || s.feasibility === 'impossible');
+      setReplanNeeded(hasIssues);
+    }
+  }, [surveys]);
   const [pageFilters, setPageFilters] = React.useState({});
   const navigate = useNavigate();
 

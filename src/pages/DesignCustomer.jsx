@@ -27,10 +27,13 @@ export default function DesignCustomer() {
     const [isAiDrawerOpen, setIsAiDrawerOpen] = useState(false);
     const [replanNeeded, setReplanNeeded] = useState(false);
 
-    // Mock logic for replanNeeded
+    // Check for replan conditions (e.g. design rejected or revision requested)
     useEffect(() => {
-        // Logic to determine if replan is needed
-    }, []);
+        if (designData) {
+            const needsReplan = designData.status === 'revision_requested' || designData.status === 'rejected';
+            setReplanNeeded(needsReplan);
+        }
+    }, [designData]);
     const [pageFilters, setPageFilters] = useState({});
 
     useEffect(() => {

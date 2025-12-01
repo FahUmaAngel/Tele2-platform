@@ -90,12 +90,11 @@ export default function OrderProcessing() {
     const { data: processingOrders } = useQuery({
         queryKey: ['processingOrders'],
         queryFn: async () => {
-            // Fetch orders with status 'processing' or 'pending' (assuming these are the ones in this phase)
+            // Fetch orders with status 'processing' or 'pending'
             // Ideally this would be filtered by status 'processing' only, but usually 'pending' are also worked on here.
-            // Let's just fetch all for now or filter client side if needed, but usually list({ status: 'processing' }) is best.
             // Using 'processing' as per requirement.
             const orders = await base44.entities.FiberOrder.list();
-            return orders.filter(o => ['processing', 'pending'].includes(o.status));
+            return orders.filter(o => ['processing', 'pending', 'installation_scheduled'].includes(o.status));
         },
         initialData: []
     });
@@ -109,6 +108,15 @@ export default function OrderProcessing() {
             return res?.[0] || null;
         }
     });
+
+    // Mock logic for replanNeeded
+    useEffect(() => {
+        if (fiberOrder) {
+            // Simple check: if status is Delayed or Blocked, we need replanning
+            const needsReplan = fiberOrder.status === 'Delayed' || fiberOrder.status === 'Blocked';
+            setReplanNeeded(needsReplan);
+        }
+    }, [fiberOrder]);
 
     // Fetch Network Design to validate approval status
     const { data: networkDesign } = useQuery({

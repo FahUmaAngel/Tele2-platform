@@ -110,12 +110,59 @@ export default function NaasInstallation() {
   }, [pageFilters, siteId, orderId, navigate]);
 
   const handleSaveDraft = () => {
+    if (!orderData) return;
     setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
-      setLastSaved(new Date());
-      setShowSaveSuccess(true);
-    }, 1500);
+
+    // In a real app, we would gather the state from child components here.
+    // For now, we'll simulate saving by updating the 'updated_date' of the order
+    // to show that we touched it.
+    updateOrderMutation.mutate({
+      id: orderData.id,
+      data: {
+        updated_date: new Date().toISOString(),
+        // We could also save partial progress here if we had it in state
+        // e.g., checklist_progress: currentChecklistState
+      }
+    }, {
+      onSuccess: () => {
+        setIsSaving(false);
+        setLastSaved(new Date());
+        setShowSaveSuccess(true);
+      },
+      onError: () => {
+        setIsSaving(false);
+        toast.error("Failed to save draft");
+      }
+    });
+  };
+
+  const handleCompleteInstallation = () => {
+    if (!orderData) return;
+
+    // Validate if ready (optional, but good practice)
+    // if (orderData.checklist_completion < 100) { ... }
+
+    const toastId = toast.loading("Finalizing installation...");
+
+    updateOrderMutation.mutate({
+      id: orderData.id,
+      data: {
+        status: 'installed', // or 'pending_rfs' depending on workflow
+        installation_completed_date: new Date().toISOString(),
+        rfs_status: 'pending' // Trigger RFS phase
+      }
+    }, {
+      onSuccess: () => {
+        toast.dismiss(toastId);
+        toast.success("Installation marked as complete!");
+        // Navigate to RFS page
+        navigate(`${createPageUrl('Rfs')}?siteId=${siteId}&orderId=${orderId || ''}`);
+      },
+      onError: () => {
+        toast.dismiss(toastId);
+        toast.error("Failed to complete installation");
+      }
+    });
   };
 
   return (
@@ -175,11 +222,12 @@ export default function NaasInstallation() {
             <Button variant="outline" onClick={() => setIsTimelineOpen(true)}>
               <Clock className="w-4 h-4 mr-2" /> Workflow Timeline
             </Button>
-            <Link to={createPageUrl('Rfs') + `?siteId=${siteId}&orderId=${orderId || ''}`}>
-              <Button className="bg-[#0a1f33] hover:bg-[#153250]">
-                Next: Ready For Service <ChevronRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
+            <Button
+              className="bg-[#0a1f33] hover:bg-[#153250]"
+              onClick={handleCompleteInstallation}
+            >
+              Next: Ready For Service <ChevronRight className="w-4 h-4 ml-2" />
+            </Button>
           </div>
         </div>
       </div>
@@ -229,7 +277,11 @@ export default function NaasInstallation() {
             activation: 'Technical Configuration & Activation'
           };
           const sectionTitle = sectionMap[category];
-          const element = document.querySelector(`h2:contains("${sectionTitle}")`);
+          // Note: jQuery-like :contains selector is not standard JS. 
+          // Using a more robust finding method would be better, but keeping simple for now.
+          const headings = Array.from(document.querySelectorAll('h2'));
+          const element = headings.find(h => h.textContent.includes(sectionTitle));
+
           if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }
@@ -346,11 +398,12 @@ export default function NaasInstallation() {
             {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
             {isSaving ? "Saving..." : "Save Draft"}
           </Button>
-          <Link to={createPageUrl('Rfs') + `?siteId=${siteId}&orderId=${orderId || ''}`}>
-            <Button className="bg-green-600 hover:bg-green-700 shadow-lg shadow-green-600/20">
-              <CheckCircle2 className="w-4 h-4 mr-2" /> Mark Installation Completed
-            </Button>
-          </Link>
+          <Button
+            className="bg-green-600 hover:bg-green-700 shadow-lg shadow-green-600/20"
+            onClick={handleCompleteInstallation}
+          >
+            <CheckCircle2 className="w-4 h-4 mr-2" /> Mark Installation Completed
+          </Button>
         </div>
       </div>
     </div>
