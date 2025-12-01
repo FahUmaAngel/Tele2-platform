@@ -26,14 +26,6 @@ export default function DesignCustomer() {
     const [isSaving, setIsSaving] = useState(false);
     const [isAiDrawerOpen, setIsAiDrawerOpen] = useState(false);
     const [replanNeeded, setReplanNeeded] = useState(false);
-
-    // Check for replan conditions (e.g. design rejected or revision requested)
-    useEffect(() => {
-        if (designData) {
-            const needsReplan = designData.status === 'revision_requested' || designData.status === 'rejected';
-            setReplanNeeded(needsReplan);
-        }
-    }, [designData]);
     const [pageFilters, setPageFilters] = useState({});
 
     useEffect(() => {
@@ -104,6 +96,14 @@ export default function DesignCustomer() {
             };
         }
     });
+
+    // Check for replan conditions (e.g. design rejected or revision requested)
+    useEffect(() => {
+        if (designData) {
+            const needsReplan = designData.status === 'revision_requested' || designData.status === 'rejected';
+            setReplanNeeded(needsReplan);
+        }
+    }, [designData]);
 
     // Local State for Design (to allow editing before save)
     const [localDesign, setLocalDesign] = useState(null);

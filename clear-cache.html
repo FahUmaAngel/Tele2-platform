@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Tele2 Cache</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        h1 { margin: 0 0 20px 0; }
+        .status { font-size: 24px; margin: 20px 0; }
+        .checkmark { font-size: 64px; color: #4ade80; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Clearing Tele2 Platform Cache...</h1>
+        <div class="status" id="status">Processing...</div>
+        <div class="checkmark" id="checkmark" style="display:none;">✓</div>
+    </div>
+    
+    <script>
+        // Clear the localStorage cache
+        localStorage.removeItem('tele2_mock_db');
+        
+        // Show success message
+        setTimeout(() => {
+            document.getElementById('status').textContent = 'Cache cleared successfully!';
+            document.getElementById('checkmark').style.display = 'block';
+            
+            // Redirect to the app after 2 seconds
+            setTimeout(() => {
+                document.getElementById('status').textContent = 'Redirecting to dashboard...';
+                setTimeout(() => {
+                    window.location.href = 'http://localhost:5174/home';
+                }, 1000);
+            }, 2000);
+        }, 500);
+    </script>
+</body>
+</html>

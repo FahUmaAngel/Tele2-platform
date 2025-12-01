@@ -1,3 +1,2 @@
 work_order_id,facility_id,order_id,status,technician,scheduled_date,completion_date,notes,id,created_date,updated_date,created_by_id,created_by,is_sample
-WO-05,SITE-SE-05,ORD-2025-05,Completed,Per Persson,2025-05-30,2025-12-01,Installation proceeding as planned.,WO-ORD-2025-05,2025-12-01T21:42:26.640Z,,,,false
-WO-08,SITE-SE-08,ORD-2025-08,Completed,Erik Eriksson,2025-06-06,2025-12-01,Installation proceeding as planned.,WO-ORD-2025-08,2025-12-01T21:42:26.640Z,,,,false
+WO-04,SITE-SE-04,ORD-2025-04,Completed,Anna Andersson,2025-05-04,2025-12-01,Installation proceeding as planned.,WO-ORD-2025-04,2025-12-01T22:01:38.570Z,,,,false
