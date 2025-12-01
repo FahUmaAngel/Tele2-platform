@@ -32,6 +32,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
+// ID Management
+import { autoBindIDs, parseFacilitySuffix, getNextSuffix } from '@/utils/idManagement';
+
 // Sub-components
 import FiberStats from '@/components/fiber/FiberStats';
 import FiberOrdersTable from '@/components/fiber/FiberOrdersTable';
@@ -91,6 +94,8 @@ export default function FiberOrdering() {
         initialData: []
     });
 
+
+
     // Calculate unique sites and next ID
     const uniqueSites = Array.from(new Set(orders.map(o => o.facility_id))).filter(Boolean).sort();
 
@@ -101,16 +106,9 @@ export default function FiberOrdering() {
     }, [isCreateOpen]);
 
     const generateNextSiteId = () => {
-        let maxNum = 0;
-        uniqueSites.forEach(id => {
-            const match = id.match(/SITE-SE-(\d+)/);
-            if (match) {
-                const num = parseInt(match[1], 10);
-                if (num > maxNum) maxNum = num;
-            }
-        });
-        const nextNum = maxNum + 1;
-        return `SITE-SE-${nextNum.toString().padStart(2, '0')}`;
+        // Use the utility function to get next suffix for Sweden
+        const nextSuffix = getNextSuffix('SE', orders);
+        return `SITE-SE-${nextSuffix}`;
     };
 
     const handleAddNewSiteClick = () => {
@@ -259,14 +257,19 @@ export default function FiberOrdering() {
 
         const selectedFacilityId = isNewSiteMode ? newSiteId : formData.get('existing_facility_id');
 
-        // Generate ID consistent with CSV format (ORD-2025-XXX)
-        const randomNum = Math.floor(Math.random() * 900) + 100;
-        const newOrderId = `ORD-2025-${randomNum}`;
+        // Use autoBindIDs to generate matching OrderID
+        const bindResult = autoBindIDs(selectedFacilityId, orders);
+
+        if (!bindResult.success) {
+            toast.dismiss(toastId);
+            toast.error(bindResult.error);
+            return;
+        }
 
         const data = {
             facility_id: selectedFacilityId,
             client: formData.get('client') || "Tele2 Enterprise",
-            order_id: newOrderId,
+            order_id: bindResult.orderId, // Auto-generated matching ID
             status: 'Planned',
             delay_risk: 'None',
             priority: priority,
