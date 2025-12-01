@@ -134,8 +134,22 @@ export default function SiteProgressV2() {
 
             const installDate = phases[phases.length - 1].end;
             const totalDays = differenceInDays(installDate, startDate);
-            const progress = Math.floor(Math.random() * 80) + 10; 
+            // Calculate Progress based on status
+            let progress = 10; // Default start (Planned)
             
+            if (order.status === 'Confirmed') progress = 15;
+            if (order.status === 'Pre-Design Complete') progress = 25;
+            if (order.status === 'Survey Complete') progress = 40;
+            if (order.status === 'Design Approved') progress = 55;
+            if (order.status === 'Order Released') progress = 70;
+            if (order.status === 'Installation Scheduled') progress = 85;
+            if (order.status === 'Completed') progress = 100;
+
+            // Fallback/Legacy checks (keep for robustness if needed, or remove if strict)
+            if (order.access_status === 'Access Granted' && progress < 40) progress = 40;
+            if ((order.rfs_status === 'Ready' || order.rfs_status === 'approved') && progress < 55) progress = 55;
+            if (order.activation_status === 'active' && order.test_results === 'passed') progress = 100;
+
             // Map Priority
             let priority = 'Medium';
             if (order.priority) {

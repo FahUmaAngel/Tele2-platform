@@ -96,9 +96,14 @@ export default function NaasPreDesign() {
         return base44.entities.NaasPreDesign.create(payload);
       }
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      // Update Fiber Order Status
+      if (fiberOrder?.id) {
+          await base44.entities.FiberOrder.update(fiberOrder.id, { status: 'Pre-Design Complete' });
+      }
       queryClient.invalidateQueries(['naasPreDesign', siteId]);
-      toast.success("Pre-design parameters saved successfully.");
+      queryClient.invalidateQueries(['fiber-orders']); // Refresh global list
+      toast.success("Pre-design parameters saved & Status Updated.");
     }
   });
 

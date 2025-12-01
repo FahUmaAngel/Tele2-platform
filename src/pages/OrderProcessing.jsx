@@ -45,6 +45,7 @@ export default function OrderProcessing() {
     const siteId = urlParams.get("siteId") || "SITE-SE-01";
     const orderIdParam = urlParams.get("orderId");
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const [validationErrors, setValidationErrors] = useState([]);
     const [showSuccessDialog, setShowSuccessDialog] = useState(false);
     const [isAiDrawerOpen, setIsAiDrawerOpen] = useState(false);
@@ -178,8 +179,12 @@ export default function OrderProcessing() {
         }, 1000);
     };
 
-    const handleRelease = () => {
+    const handleRelease = async () => {
         if (runValidation()) {
+            if (fiberOrder?.id) {
+                await base44.entities.FiberOrder.update(fiberOrder.id, { status: 'Order Released' });
+                queryClient.invalidateQueries(['fiber-orders']);
+            }
             setShowSuccessDialog(true);
         } else {
             toast.error("Validation failed. Please fix blocking issues.");

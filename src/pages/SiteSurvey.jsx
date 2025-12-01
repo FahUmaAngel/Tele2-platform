@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import SurveyCard from "@/components/site-survey/SurveyCard";
 import WorkflowTimeline from '@/components/shared/WorkflowTimeline';
 import PageFilter from '@/components/shared/PageFilter';
 import ReplanButton from '@/components/ReplanButton';
+import { toast } from "sonner";
 
 export default function SiteSurvey() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -48,6 +49,28 @@ export default function SiteSurvey() {
     return true;
   }) || [];
 
+  const { data: fiberOrder } = useQuery({
+    queryKey: ['fiberOrder', siteId],
+    queryFn: async () => {
+      const res = await base44.entities.FiberOrder.list({ facility_id: siteId });
+      return res?.[0] || null;
+    }
+  });
+
+  const queryClient = useQueryClient();
+
+  const completeSurveyMutation = useMutation({
+    mutationFn: async () => {
+      if (fiberOrder?.id) {
+        return base44.entities.FiberOrder.update(fiberOrder.id, { status: 'Survey Complete' });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['fiber-orders']);
+      toast.success("Survey marked as complete & Status Updated.");
+    }
+  });
+
   return (
     <div className="space-y-8">
       <PageFilter onFilterChange={setPageFilters} defaultFilters={{ facility_id: siteId }} />
@@ -66,6 +89,13 @@ export default function SiteSurvey() {
           >
             {replanNeeded ? "Replanning Required" : "AI Replan"}
           </ReplanButton>
+          <Button
+            className="bg-green-600 hover:bg-green-700"
+            onClick={() => completeSurveyMutation.mutate()}
+            disabled={!fiberOrder}
+          >
+            Complete Survey
+          </Button>
           <Button className="bg-[#0a1f33]">New Survey</Button>
         </div>
       </div>
