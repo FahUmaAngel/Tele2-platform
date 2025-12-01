@@ -113,29 +113,58 @@ export default function RFSProgressOverview() {
     { name: 'NaaS', value: naasCompletedCount }
   ].filter(item => item.value > 0);
 
-  // Chart 3: Progress Distribution (based on SiteOverview logic)
-  const progressGroups = {};
-  allOrders.forEach(order => {
-    let progress = "1. Fiber Ordering";
+  // Chart 3: Progress Distribution (Level Wise)
+  const progressGroups = {
+    "1. Fiber Ordering & Delivery": 0,
+    "2. NaaS Pre-Design": 0,
+    "3. Site Survey & Documentation": 0,
+    "4. Design & Customer Engineering": 0,
+    "5. Order Processing": 0,
+    "6. NaaS Installation & Activation": 0,
+    "7. Ready For Service (RFS)": 0
+  };
 
-    if (order.status === 'Completed') {
-      progress = "7. RFS Ready";
-    } else if (order.status === 'Installation Scheduled') {
-      progress = "6. Installation";
-    } else if (order.status === 'Confirmed') {
+  allOrders.forEach(order => {
+    let progress = "1. Fiber Ordering & Delivery"; // Default
+
+    const status = order.status || '';
+    const isNaas = order.service_type === 'naas' || order.order_type === 'naas';
+
+    if (status === 'Completed' || status === 'completed') {
+      progress = "7. Ready For Service (RFS)";
+    } else if (status === 'Installation Scheduled') {
+      progress = "6. NaaS Installation & Activation";
+    } else if (status === 'Confirmed' || status === 'processing') {
       progress = "5. Order Processing";
-    } else if (order.service_type === 'naas' || order.order_type === 'naas') {
+    } else if (status === 'Confirming') {
+      progress = "4. Design & Customer Engineering";
+    } else if (status === 'Planned') {
+      progress = "3. Site Survey & Documentation";
+    } else if (isNaas) {
+      // If it's NaaS and hasn't matched the above (later stages), it falls here?
+      // Or should NaaS Pre-Design be a specific status? 
+      // Based on previous logic: "if (order.service_type === 'naas'...) progress = '2. NaaS Pre-Design'"
+      // But we need to be careful not to overwrite later stages.
+      // The previous logic checked status first.
+      // Let's assume if it's not one of the specific statuses above, and it is NaaS, it is Pre-Design.
       progress = "2. NaaS Pre-Design";
     }
+    // Default is "1. Fiber Ordering & Delivery" for pending, Delivered, In Transit, etc.
 
-    progressGroups[progress] = (progressGroups[progress] || 0) + 1;
+    if (progressGroups[progress] !== undefined) {
+      progressGroups[progress] += 1;
+    } else {
+      progressGroups[progress] = 1;
+    }
   });
 
-  const progressDistributionData = Object.entries(progressGroups).map(([name, value]) => ({
-    name,
-    value,
-    label: `${name} (${value})`
-  }));
+  const progressDistributionData = Object.entries(progressGroups)
+    .map(([name, value]) => ({
+      name,
+      value,
+      label: `${name} (${value})`
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   // Chart 4: Monthly Velocity (Planned vs Completed, grouped by service type)
   const monthlyGroups = {};
@@ -198,9 +227,8 @@ export default function RFSProgressOverview() {
 
   const monthlyVelocityData = Object.values(monthlyGroups).sort((a, b) => a.sortTime - b.sortTime);
 
-  // Custom label renderer for pie charts
+  // Custom label renderer for pie charts - always show numbers
   const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name, value }) => {
-    if (percent < 0.05) return null; // Don't show label if slice is too small
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -214,6 +242,70 @@ export default function RFSProgressOverview() {
         textAnchor={x > cx ? 'start' : 'end'}
         dominantBaseline="central"
         className="text-xs font-semibold"
+      >
+        {value}
+      </text>
+    );
+  };
+
+  // Custom callout label renderer for Completion Status chart - shows percentages
+  const renderCalloutLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }) => {
+    const RADIAN = Math.PI / 180;
+    // Position the label further out from the pie
+    const radius = outerRadius + 40;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    // Calculate line points for the callout
+    const lineRadius = outerRadius + 5;
+    const lineX = cx + lineRadius * Math.cos(-midAngle * RADIAN);
+    const lineY = cy + lineRadius * Math.sin(-midAngle * RADIAN);
+
+    return (
+      <g>
+        {/* Callout line */}
+        <line
+          x1={lineX}
+          y1={lineY}
+          x2={x}
+          y2={y}
+          stroke="#9ca3af"
+          strokeWidth={1}
+        />
+        {/* Label text */}
+        <text
+          x={x}
+          y={y}
+          fill="#374151"
+          textAnchor={x > cx ? 'start' : 'end'}
+          dominantBaseline="central"
+          className="text-[11px] font-semibold"
+        >
+          {`${(percent * 100).toFixed(1)}%`}
+        </text>
+      </g>
+    );
+  };
+
+  // Custom label renderer for Progress Distribution - inside and near outer boundary
+  const renderInsideBoundaryLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name, value }) => {
+    if (value === 0) return null; // Hide label if value is 0
+
+    const RADIAN = Math.PI / 180;
+    // Position near the outer boundary (e.g., 80% of radius)
+    const radius = outerRadius * 0.75;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    return (
+      <text
+        x={x}
+        y={y}
+        fill="white"
+        textAnchor="middle"
+        dominantBaseline="central"
+        className="text-[10px] font-bold"
+        style={{ textShadow: '0px 1px 2px rgba(0,0,0,0.5)' }}
       >
         {value}
       </text>
@@ -234,8 +326,8 @@ export default function RFSProgressOverview() {
 
           {/* Chart 1: Completion Status by Status */}
           <div className="flex flex-col items-center border-b lg:border-b-0 pb-6 lg:pb-0">
-            <h3 className="text-sm font-medium text-gray-500 mb-4 text-center">Completion Status</h3>
-            <div className="h-[220px] w-full max-w-[320px]">
+            <h3 className="text-base font-bold text-gray-700 mb-4 text-center">Completion Status</h3>
+            <div className="h-[280px] w-full max-w-[400px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -244,7 +336,7 @@ export default function RFSProgressOverview() {
                     cy="50%"
                     outerRadius={80}
                     dataKey="value"
-                    label={renderCustomLabel}
+                    label={renderCalloutLabel}
                   >
                     {completionStatusData.map((entry, index) => {
                       let color = COLORS.inProgress;
@@ -259,7 +351,7 @@ export default function RFSProgressOverview() {
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                     itemStyle={{ fontSize: '12px', fontWeight: 500 }}
                   />
-                  <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                  <Legend verticalAlign="top" layout="vertical" iconType="circle" wrapperStyle={{ fontSize: '9px' }} align="left" />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -267,7 +359,7 @@ export default function RFSProgressOverview() {
 
           {/* Chart 2: Type Distribution (Completed Only) */}
           <div className="flex flex-col items-center border-b lg:border-b-0 pb-6 lg:pb-0">
-            <h3 className="text-sm font-medium text-gray-500 mb-4 text-center">Type Distribution (Completed)</h3>
+            <h3 className="text-base font-bold text-gray-700 mb-4 text-center">Type Distribution (Completed)</h3>
             <div className="h-[220px] w-full max-w-[320px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -277,7 +369,8 @@ export default function RFSProgressOverview() {
                     cy="50%"
                     outerRadius={80}
                     dataKey="value"
-                    label={({ name, percent, value }) => percent > 0 ? `${name}: ${value}` : ''}
+                    label={renderCustomLabel}
+                    labelLine={false}
                   >
                     <Cell key="cell-fiber" fill={COLORS.fiber} />
                     <Cell key="cell-naas" fill={COLORS.naas} />
@@ -285,16 +378,16 @@ export default function RFSProgressOverview() {
                   <Tooltip
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   />
-                  <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                  <Legend verticalAlign="top" layout="vertical" iconType="circle" wrapperStyle={{ fontSize: '9px' }} align="right" />
                 </PieChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          {/* Chart 3: Progress Distribution */}
+          {/* Chart 3: Progress Distribution (Level Wise) */}
           <div className="flex flex-col items-center">
-            <h3 className="text-sm font-medium text-gray-500 mb-4 text-center">Progress Distribution</h3>
-            <div className="h-[220px] w-full max-w-[320px]">
+            <h3 className="text-base font-bold text-gray-700 mb-4 text-center">Progress Distribution (Level Wise)</h3>
+            <div className="h-[280px] w-full max-w-[400px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -303,14 +396,25 @@ export default function RFSProgressOverview() {
                     cy="50%"
                     outerRadius={80}
                     dataKey="value"
-                    label={renderCustomLabel}
+                    label={renderInsideBoundaryLabel}
+                    labelLine={false}
                   >
                     {progressDistributionData.map((entry, index) => {
-                      let color = COLORS.progress1;
-                      if (entry.name.startsWith('2.')) color = COLORS.progress2;
-                      else if (entry.name.startsWith('5.')) color = COLORS.progress5;
-                      else if (entry.name.startsWith('6.')) color = COLORS.progress6;
-                      else if (entry.name.startsWith('7.')) color = COLORS.progress7;
+                      // Assign colors based on step number to distinguish them
+                      const step = parseInt(entry.name.split('.')[0]);
+                      // Generate a gradient or distinct colors for 7 steps
+                      // We can use a palette or calculate HSL
+                      // Let's use a predefined set or cycle through COLORS
+                      const stepColors = [
+                        '#60a5fa', // 1. Blue 400
+                        '#818cf8', // 2. Indigo 400
+                        '#a78bfa', // 3. Violet 400
+                        '#c084fc', // 4. Purple 400
+                        '#e879f9', // 5. Fuchsia 400
+                        '#f472b6', // 6. Pink 400
+                        '#10b981'  // 7. Emerald 500 (RFS)
+                      ];
+                      const color = stepColors[step - 1] || COLORS.progress1;
                       return <Cell key={`cell-${index}`} fill={color} />;
                     })}
                   </Pie>
@@ -319,10 +423,15 @@ export default function RFSProgressOverview() {
                     itemStyle={{ fontSize: '12px', fontWeight: 500 }}
                   />
                   <Legend
-                    verticalAlign="bottom"
-                    height={36}
+                    verticalAlign="top"
+                    layout="vertical"
                     iconType="circle"
-                    wrapperStyle={{ fontSize: '10px' }}
+                    wrapperStyle={{ fontSize: '9px' }}
+                    align="left"
+                    formatter={(value, entry) => {
+                      // Remove the numbering "1. " etc
+                      return entry.payload.name.replace(/^\d+\.\s*/, '');
+                    }}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -331,7 +440,7 @@ export default function RFSProgressOverview() {
 
           {/* Chart 4: Monthly Velocity (Planned vs Completed) */}
           <div className="flex flex-col items-center">
-            <h3 className="text-sm font-medium text-gray-500 mb-4 text-center">Monthly Velocity</h3>
+            <h3 className="text-base font-bold text-gray-700 mb-4 text-center">Monthly Velocity</h3>
             <div className="h-[220px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
@@ -356,8 +465,11 @@ export default function RFSProgressOverview() {
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   />
                   <Legend
-                    wrapperStyle={{ fontSize: '11px' }}
+                    verticalAlign="top"
+                    layout="vertical"
+                    wrapperStyle={{ fontSize: '9px' }}
                     iconType="rect"
+                    align="right"
                   />
                   <Bar dataKey="fiberPlanned" name="Fiber Planned" fill={COLORS.fiberPlanned} radius={[4, 4, 0, 0]} />
                   <Bar dataKey="fiberCompleted" name="Fiber Completed" fill={COLORS.fiberCompleted} radius={[4, 4, 0, 0]} />
