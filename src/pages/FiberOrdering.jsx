@@ -259,10 +259,14 @@ export default function FiberOrdering() {
 
         const selectedFacilityId = isNewSiteMode ? newSiteId : formData.get('existing_facility_id');
 
+        // Generate ID consistent with CSV format (ORD-2025-XXX)
+        const randomNum = Math.floor(Math.random() * 900) + 100;
+        const newOrderId = `ORD-2025-${randomNum}`;
+
         const data = {
             facility_id: selectedFacilityId,
             client: formData.get('client') || "Tele2 Enterprise",
-            order_id: `FO-${Date.now().toString().slice(-6)}`, // Unique ID
+            order_id: newOrderId,
             status: 'Planned',
             delay_risk: 'None',
             priority: priority,
@@ -297,11 +301,21 @@ export default function FiberOrdering() {
 
         createOrderMutation.mutate(data, {
             onSuccess: () => {
+                // Invalidate all fiber-orders queries to ensure list updates regardless of filter
+                queryClient.invalidateQueries({ queryKey: ['fiber-orders'] });
+
+                // If we created a new site, navigate to it
+                if (selectedFacilityId !== siteId) {
+                    navigate(`${createPageUrl('FiberOrdering')}?siteId=${selectedFacilityId}`);
+                }
+
                 toast.dismiss(toastId);
                 toast.success(geocodingStatus === 'success' ? "Order created & Geocoded!" : "Order created (Geocoding Failed)");
+                setIsCreateOpen(false);
             },
             onError: () => {
                 toast.dismiss(toastId);
+                toast.error("Failed to create order");
             }
         });
     };

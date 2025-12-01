@@ -33,28 +33,38 @@ const processEntityData = (data, jsonFields = []) => {
     });
 };
 
-// In-memory store to simulate database
-const store = {
-    FiberOrder: processEntityData(parseCsv(fiberOrderCsv), []).map(item => {
-        return {
+// In-memory store to simulate database, with localStorage persistence
+const loadStore = () => {
+    const saved = localStorage.getItem('tele2_mock_db');
+    if (saved) {
+        return JSON.parse(saved);
+    }
+    return {
+        FiberOrder: processEntityData(parseCsv(fiberOrderCsv), []).map(item => ({
             ...item,
             lat: item.lat ? parseFloat(item.lat) : null,
             lng: item.lng ? parseFloat(item.lng) : null,
             priority: item.priority ? parseInt(item.priority, 10) : 3,
-        };
-    }),
-    NetworkDesign: processEntityData(parseCsv(networkDesignCsv), [
-        'hardware_specs',
-        'pricing',
-        'customer_contact',
-        'ai_insights',
-        'approval_history'
-    ]),
-    NaasPreDesign: parseCsv(naasPreDesignCsv),
-    SiteSurvey: parseCsv(siteSurveyCsv),
-    Supplier: parseCsv(supplierCsv),
-    Subcontractor: parseCsv(subcontractorCsv),
-    WorkOrder: parseCsv(workOrderCsv)
+        })),
+        NetworkDesign: processEntityData(parseCsv(networkDesignCsv), [
+            'hardware_specs',
+            'pricing',
+            'customer_contact',
+            'ai_insights',
+            'approval_history'
+        ]),
+        NaasPreDesign: parseCsv(naasPreDesignCsv),
+        SiteSurvey: parseCsv(siteSurveyCsv),
+        Supplier: parseCsv(supplierCsv),
+        Subcontractor: parseCsv(subcontractorCsv),
+        WorkOrder: parseCsv(workOrderCsv)
+    };
+};
+
+const store = loadStore();
+
+const saveStore = () => {
+    localStorage.setItem('tele2_mock_db', JSON.stringify(store));
 };
 
 // Helper to simulate async delay
@@ -110,6 +120,7 @@ const createEntityClient = (entityName) => ({
             updated_date: new Date().toISOString()
         };
         store[entityName] = [newItem, ...(store[entityName] || [])];
+        saveStore();
         return newItem;
     },
 
@@ -125,6 +136,7 @@ const createEntityClient = (entityName) => ({
         };
 
         store[entityName][index] = updatedItem;
+        saveStore();
         return updatedItem;
     },
 

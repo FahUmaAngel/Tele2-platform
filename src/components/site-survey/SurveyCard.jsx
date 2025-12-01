@@ -2,15 +2,15 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { 
-  MapPin, 
-  CheckCircle, 
-  XCircle, 
-  ChevronDown, 
-  ChevronUp, 
-  Calendar, 
+import {
+  MapPin,
+  CheckCircle,
+  XCircle,
+  ChevronDown,
+  ChevronUp,
+  Calendar,
   User,
   Construction,
   AlertTriangle,
@@ -28,12 +28,32 @@ export default function SurveyCard({ survey }) {
   const { data: order } = useQuery({
     queryKey: ['fiber-order-client', survey.facility_id],
     queryFn: async () => {
-        if (!survey.facility_id) return null;
-        const res = await base44.entities.FiberOrder.list({ facility_id: survey.facility_id });
-        return res?.[0] || null;
+      if (!survey.facility_id) return null;
+      const res = await base44.entities.FiberOrder.list({ facility_id: survey.facility_id });
+      return res?.[0] || null;
     },
     enabled: !!survey.facility_id
   });
+
+  const queryClient = useQueryClient();
+
+  const updateSurveyMutation = useMutation({
+    mutationFn: ({ id, status }) => base44.entities.SiteSurvey.update(id, { status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['site-surveys'] });
+    },
+    onError: (err) => {
+      console.error("Failed to update survey:", err);
+      alert(`Failed to update survey: ${err.message}`);
+    }
+  });
+
+  const handleComplete = (e) => {
+    e.stopPropagation();
+    if (confirm("Mark survey as completed?")) {
+      updateSurveyMutation.mutate({ id: survey.id, status: 'Completed' });
+    }
+  };
 
   const toggleExpand = () => setIsExpanded(!isExpanded);
 
@@ -52,25 +72,25 @@ export default function SurveyCard({ survey }) {
                 {order?.client || survey.client}
               </CardTitle>
               <span className="text-xs font-mono text-gray-500 ml-6">
-                  {survey.facility_id || "NO-ID"}
-                  {survey.order_id && <span className="mx-2 text-gray-300">|</span>}
-                  {survey.order_id && <span>{survey.order_id}</span>}
+                {survey.facility_id || "NO-ID"}
+                {survey.order_id && <span className="mx-2 text-gray-300">|</span>}
+                {survey.order_id && <span>{survey.order_id}</span>}
               </span>
             </div>
             <div className="flex items-center gap-2">
               {survey.feasibility === 'feasible' ? (
                 <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 gap-1">
-                   <CheckCircle className="w-3 h-3" /> Feasible
+                  <CheckCircle className="w-3 h-3" /> Feasible
                 </Badge>
               ) : (
                 <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 gap-1">
-                   <XCircle className="w-3 h-3" /> Issues
+                  <XCircle className="w-3 h-3" /> Issues
                 </Badge>
               )}
             </div>
           </div>
         </CardHeader>
-        
+
         <CardContent>
           {/* Collapsed Content (Always Visible) */}
           <div className="space-y-3 text-sm text-gray-600">
@@ -104,13 +124,13 @@ export default function SurveyCard({ survey }) {
 
           {/* Expand Trigger */}
           <div className="mt-4 flex justify-center">
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={(e) => {
                 e.stopPropagation();
                 toggleExpand();
-              }} 
+              }}
               className="w-full h-6 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
             >
               {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -128,7 +148,7 @@ export default function SurveyCard({ survey }) {
                 className="overflow-hidden"
               >
                 <div className="pt-4 space-y-4 border-t border-gray-100 mt-2">
-                  
+
                   {/* Detailed Address */}
                   <div className="space-y-1">
                     <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Full Address</span>
@@ -168,18 +188,23 @@ export default function SurveyCard({ survey }) {
 
                   {/* Actions Footer */}
                   <div className="flex gap-2 pt-2">
-                    <Link 
-                        to={`${createPageUrl('DesignCustomer')}?siteId=${survey.facility_id}&orderId=${survey.order_id || order?.order_id}`} 
-                        className="flex-1"
-                        onClick={(e) => e.stopPropagation()}
+                    <Link
+                      to={`${createPageUrl('DesignCustomer')}?siteId=${survey.facility_id}&orderId=${survey.order_id || order?.order_id}`}
+                      className="flex-1"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                        <Button className="w-full bg-[#0a1f33] hover:bg-[#153250] h-8 text-xs">
-                           Design
-                        </Button>
+                      <Button className="w-full bg-[#0a1f33] hover:bg-[#153250] h-8 text-xs">
+                        Design
+                      </Button>
                     </Link>
-                    <Button className="flex-1 bg-blue-600 hover:bg-blue-700 h-8 text-xs">
-                      <PenTool className="w-3 h-3 mr-2" /> Edit Survey
-                    </Button>
+                    {survey.status !== 'Completed' && (
+                      <Button
+                        className="flex-1 bg-green-600 hover:bg-green-700 h-8 text-xs"
+                        onClick={handleComplete}
+                      >
+                        <CheckCircle className="w-3 h-3 mr-2" /> Complete
+                      </Button>
+                    )}
                     <Button variant="outline" className="flex-1 h-8 text-xs">
                       <Download className="w-3 h-3 mr-2" /> PDF Report
                     </Button>
@@ -191,6 +216,6 @@ export default function SurveyCard({ survey }) {
           </AnimatePresence>
         </CardContent>
       </Card>
-    </motion.div>
+    </motion.div >
   );
 }
