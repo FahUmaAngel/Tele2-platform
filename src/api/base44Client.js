@@ -13,5 +13,6 @@ const { appId, serverUrl, token, functionsVersion } = appParams;
 // });
 
 // Use Mock Client for local CSV data
-import { mockBase44Client } from './mockBase44Client';
-export const base44 = mockBase44Client;
+// Use Dexie Client for local database
+import { dexieClient } from './dexieClient';
+export const base44 = dexieClient;

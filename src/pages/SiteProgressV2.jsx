@@ -136,9 +136,13 @@ export default function SiteProgressV2() {
             const totalDays = differenceInDays(installDate, startDate);
             const progress = Math.floor(Math.random() * 80) + 10; 
             
-            // Mock Priority
-            const priorities = ['High', 'Medium', 'Low'];
-            const priority = priorities[Math.floor(Math.random() * priorities.length)];
+            // Map Priority
+            let priority = 'Medium';
+            if (order.priority) {
+                const p = parseInt(order.priority);
+                if (p <= 2) priority = 'High';
+                else if (p >= 4) priority = 'Low';
+            }
 
             const currentProgressDate = addDays(startDate, Math.floor((progress / 100) * totalDays));
 
