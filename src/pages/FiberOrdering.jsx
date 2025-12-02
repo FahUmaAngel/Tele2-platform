@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
     ChevronRight,
@@ -48,8 +48,8 @@ import PageFilter from '@/components/shared/PageFilter';
 import ReplanButton from '@/components/ReplanButton';
 
 export default function FiberOrdering() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const siteId = urlParams.get("siteId") || "SITE-SE-01";
+    const [searchParams] = useSearchParams();
+    const siteId = searchParams.get("siteId") || "SITE-SE-01";
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [isAiDrawerOpen, setIsAiDrawerOpen] = useState(false);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -593,13 +593,13 @@ export default function FiberOrdering() {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <Label>Subcontractor</Label>
-                                            <Select name="subcontractor" defaultValue="NordGräv">
+                                            <Select name="subcontractor" defaultValue="NordGrÃ¤v">
                                                 <SelectTrigger><SelectValue /></SelectTrigger>
                                                 <SelectContent>
                                                     {subcontractors.map(s => (
                                                         <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
                                                     ))}
-                                                    <SelectItem value="NordGräv">NordGräv (Best Match)</SelectItem>
+                                                    <SelectItem value="NordGrÃ¤v">NordGrÃ¤v (Best Match)</SelectItem>
                                                     <SelectItem value="Svea Fiber">Svea Fiber</SelectItem>
                                                 </SelectContent>
                                             </Select>

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
     ChevronRight,
@@ -41,9 +41,9 @@ import PageFilter from '@/components/shared/PageFilter';
 import ReplanButton from '@/components/ReplanButton';
 
 export default function OrderProcessing() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const siteId = urlParams.get("siteId") || "SITE-SE-01";
-    const orderIdParam = urlParams.get("orderId");
+    const [searchParams] = useSearchParams();
+    const siteId = searchParams.get("siteId") || "SITE-SE-01";
+    const orderIdParam = searchParams.get("orderId");
     const navigate = useNavigate();
     const [validationErrors, setValidationErrors] = useState([]);
     const [showSuccessDialog, setShowSuccessDialog] = useState(false);
@@ -141,6 +141,20 @@ export default function OrderProcessing() {
         }
     };
 
+    // --- Mutations ---
+    const queryClient = useQueryClient();
+    
+    const updateOrderMutation = useMutation({
+        mutationFn: async (data) => {
+            if (!fiberOrder?.id) throw new Error('No order to update');
+            return base44.entities.FiberOrder.update(fiberOrder.id, data);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries(['fiberOrder', siteId, orderIdParam]);
+            queryClient.invalidateQueries(['processingOrders']);
+        }
+    });
+
     // Mock data for BOM if empty (usually would fetch from entity)
     const { data: bomItems } = useQuery({
         queryKey: ['bomItems', fiberOrder?.order_id],
@@ -195,16 +209,51 @@ export default function OrderProcessing() {
 
     // --- Actions ---
     const handleSaveDraft = () => {
+        if (!fiberOrder) {
+            toast.error("No order to save");
+            return;
+        }
+
         setIsSaving(true);
-        setTimeout(() => {
-            setIsSaving(false);
-            toast.success("Draft saved successfully");
-        }, 1000);
+        updateOrderMutation.mutate({
+            updated_date: new Date().toISOString()
+        }, {
+            onSuccess: () => {
+                setIsSaving(false);
+                toast.success("Draft saved successfully");
+            },
+            onError: () => {
+                setIsSaving(false);
+                toast.error("Failed to save draft");
+            }
+        });
     };
 
     const handleRelease = () => {
+        if (!fiberOrder) {
+            toast.error("No order to release");
+            return;
+        }
+
         if (runValidation()) {
-            setShowSuccessDialog(true);
+            const toastId = toast.loading("Releasing order to installation...");
+            
+            updateOrderMutation.mutate({
+                status: 'installation_scheduled',
+                released_to_installation_date: new Date().toISOString(),
+                rfs_status: 'pending',
+                updated_date: new Date().toISOString()
+            }, {
+                onSuccess: () => {
+                    toast.dismiss(toastId);
+                    toast.success("Order released successfully!");
+                    setShowSuccessDialog(true);
+                },
+                onError: () => {
+                    toast.dismiss(toastId);
+                    toast.error("Failed to release order");
+                }
+            });
         } else {
             toast.error("Validation failed. Please fix blocking issues.");
         }
@@ -238,7 +287,7 @@ export default function OrderProcessing() {
                                 <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs font-semibold border border-blue-100">Step 5 of 7</span>
                             </div>
                             <p className="text-gray-500 mt-1">
-                                Facility ID: <span className="font-mono text-gray-700">{siteId}</span> •
+                                Facility ID: <span className="font-mono text-gray-700">{siteId}</span> â€¢
                                 Order ID: <span className="font-mono text-gray-700">{fiberOrder?.order_id || orderIdParam || "N/A"}</span>
                             </p>
                         </div>
@@ -404,3 +453,4 @@ export default function OrderProcessing() {
         </div>
     );
 }
+
