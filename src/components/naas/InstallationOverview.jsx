@@ -1,10 +1,10 @@
 import React from 'react';
-import { 
-  Link as LinkIcon, 
-  ArrowRight, 
-  CheckCircle, 
-  Clock, 
-  Info, 
+import {
+  Link as LinkIcon,
+  ArrowRight,
+  CheckCircle,
+  Clock,
+  Info,
   TrendingUp,
   FileText,
   Network
@@ -29,14 +29,14 @@ export default function InstallationOverview({ siteId, orderId }) {
   const { data: orders } = useQuery({
     queryKey: ['order', siteId, orderId],
     queryFn: async () => {
-        const query = { facility_id: siteId };
-        if (orderId) query.order_id = orderId;
-        // If orderId is specific, we want that one. If not, we take the latest for the site.
-        // list(query, sort, limit)
-        return base44.entities.FiberOrder.list(query, '-created_date', 1);
+      const query = { facility_id: siteId };
+      if (orderId) query.order_id = orderId;
+      // If orderId is specific, we want that one. If not, we take the latest for the site.
+      // list(query, sort, limit)
+      return base44.entities.FiberOrder.list(query, '-created_date', 1);
     }
   });
-  
+
   const order = orders?.[0];
 
   return (
@@ -56,13 +56,13 @@ export default function InstallationOverview({ siteId, orderId }) {
             </div>
             <div className="hidden md:block">
               <div className="h-20 w-20 rounded-full bg-blue-500/20 flex items-center justify-center border-4 border-blue-500/30">
-                <span className="text-xl font-bold">65%</span>
+                <span className="text-xl font-bold">{order?.progress || '0%'}</span>
               </div>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-             <Link to={createPageUrl('FiberOrdering') + `?siteId=${siteId}`} className="group">
+            <Link to={createPageUrl('FiberOrdering') + `?siteId=${siteId}`} className="group">
               <div className="bg-white/5 hover:bg-white/10 p-3 rounded-lg transition-colors border border-white/10">
                 <div className="flex items-center gap-2 mb-1 text-slate-300">
                   <Network className="w-4 h-4" />
@@ -97,7 +97,7 @@ export default function InstallationOverview({ siteId, orderId }) {
                 <span className="text-xs font-medium uppercase">Est. Completion</span>
               </div>
               <div className="text-sm font-semibold text-white">
-                Today, 14:00
+                {order?.delivery_est_date || 'TBD'}
               </div>
             </div>
           </div>
@@ -112,7 +112,7 @@ export default function InstallationOverview({ siteId, orderId }) {
           </div>
           <h3 className="text-lg font-bold text-indigo-950 mb-2">AI Prediction</h3>
           <p className="text-sm text-indigo-800/80 mb-4">
-            Based on current progress and technician velocity, installation is likely to finish 
+            Based on current progress and technician velocity, installation is likely to finish
             <span className="font-semibold text-indigo-600"> 45 minutes ahead of schedule</span>.
           </p>
           <Dialog>
@@ -139,7 +139,7 @@ export default function InstallationOverview({ siteId, orderId }) {
                     <div className="text-2xl font-bold text-green-900">94%</div>
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium text-gray-900">Stage Breakdown</h4>
                   <div className="space-y-1">
