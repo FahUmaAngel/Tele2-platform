@@ -127,7 +127,7 @@ export default function Analytics() {
       }
 
       if (!groupedData[key]) {
-        groupedData[key] = { fiber: 0, naas: 0, date: key };
+        groupedData[key] = { fiber: 0, naas: 0, date: key, sortDate: orderDate };
       }
 
       if (order.service_type === 'fiber') {
@@ -137,11 +137,9 @@ export default function Analytics() {
       }
     });
 
-    // Convert to array and sort
+    // Convert to array and sort by the actual date
     return Object.values(groupedData).sort((a, b) => {
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      return dateA - dateB;
+      return a.sortDate - b.sortDate;
     });
   }, [allOrders, timePeriod]);
 
@@ -361,17 +359,7 @@ export default function Analytics() {
             <CardContent>
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={velocityData}>
-                    <defs>
-                      <linearGradient id="colorFiber" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={COLORS.fiber} stopOpacity={0.3} />
-                        <stop offset="95%" stopColor={COLORS.fiber} stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="colorNaas" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={COLORS.naas} stopOpacity={0.3} />
-                        <stop offset="95%" stopColor={COLORS.naas} stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
+                  <LineChart data={velocityData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis
                       dataKey="date"
@@ -390,25 +378,27 @@ export default function Analytics() {
                       }}
                     />
                     <Legend />
-                    <Area
+                    <Line
                       type="monotone"
                       dataKey="fiber"
                       name="Fiber Orders"
                       stroke={COLORS.fiber}
-                      strokeWidth={2}
-                      fillOpacity={1}
-                      fill="url(#colorFiber)"
+                      strokeWidth={3}
+                      dot={{ r: 4, strokeWidth: 2 }}
+                      activeDot={{ r: 6 }}
+                      connectNulls
                     />
-                    <Area
+                    <Line
                       type="monotone"
                       dataKey="naas"
                       name="NaaS Orders"
                       stroke={COLORS.naas}
-                      strokeWidth={2}
-                      fillOpacity={1}
-                      fill="url(#colorNaas)"
+                      strokeWidth={3}
+                      dot={{ r: 4, strokeWidth: 2 }}
+                      activeDot={{ r: 6 }}
+                      connectNulls
                     />
-                  </AreaChart>
+                  </LineChart>
                 </ResponsiveContainer>
               </div>
             </CardContent>
@@ -441,13 +431,9 @@ export default function Analytics() {
                         fill="#8884d8"
                         dataKey="value"
                       >
-                        {statusData.map((entry, index) => {
-                          let color = COLORS.inProgress;
-                          if (entry.name === 'Completed' || entry.name === 'completed') color = COLORS.completed;
-                          else if (entry.name === 'Delayed') color = COLORS.delayed;
-                          else if (entry.name === 'Blocked') color = COLORS.blocked;
-                          return <Cell key={`cell-${index}`} fill={color} />;
-                        })}
+                        {statusData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={GEO_COLORS[index % GEO_COLORS.length]} />
+                        ))}
                       </Pie>
                       <Tooltip />
                       <Legend
