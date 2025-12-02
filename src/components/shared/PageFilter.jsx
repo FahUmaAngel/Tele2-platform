@@ -37,7 +37,9 @@ export default function PageFilter({ onFilterChange, className, defaultFilters }
       const effectiveFilters = {
          ...filters,
          facility_id: filters.facility_id === "all" ? "" : filters.facility_id,
-         order_id: filters.order_id === "all" ? "" : filters.order_id
+         order_id: filters.order_id === "all" ? "" : filters.order_id,
+         status: filters.status === "all" ? "" : filters.status,
+         priority: filters.priority === "all" ? "" : filters.priority
       };
       onFilterChange(effectiveFilters);
    }, [filters, onFilterChange]);
@@ -100,9 +102,23 @@ export default function PageFilter({ onFilterChange, className, defaultFilters }
                   </SelectContent>
                </Select>
 
+               {/* Status Dropdown */}
                <Select value={filters.status} onValueChange={(val) => handleChange('status', val)}>
                   <SelectTrigger className="w-[140px] h-9 text-sm">
                      <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                     <SelectItem value="all">All Statuses</SelectItem>
+                     {Array.from(new Set(orders.map(o => o.status))).filter(Boolean).sort().map(status => (
+                        <SelectItem key={status} value={status}>{status}</SelectItem>
+                     ))}
+                  </SelectContent>
+               </Select>
+
+               {/* Priority Dropdown */}
+               <Select value={filters.priority} onValueChange={(val) => handleChange('priority', val)}>
+                  <SelectTrigger className="w-[140px] h-9 text-sm">
+                     <SelectValue placeholder="Priority" />
                   </SelectTrigger>
                   <SelectContent>
                      <SelectItem value="all">All Priorities</SelectItem>
@@ -113,6 +129,7 @@ export default function PageFilter({ onFilterChange, className, defaultFilters }
                      <SelectItem value="5">5 - Minimal</SelectItem>
                   </SelectContent>
                </Select>
+
                {(filters.search || filters.facility_id !== 'all' || filters.order_id !== 'all' || filters.status !== 'all' || filters.priority !== 'all') && (
                   <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9 px-2 text-gray-500 hover:text-gray-700">
                      <X className="w-4 h-4 mr-1" /> Clear

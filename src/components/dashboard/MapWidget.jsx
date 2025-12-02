@@ -24,17 +24,30 @@ const staticSites = []; // Removed static sites to use real data only
 
 const getColor = (status) => {
   switch (status) {
-    case 'blocked': return '#ef4444'; // Red - Blocked
-    case 'risk': return '#f59e0b';    // Yellow - At Risk
-    case 'normal': return '#3b82f6';  // Blue - Smooth
+    case 'stopped': return '#dc2626';   // Red - Stopped/Blocked
+    case 'at-risk': return '#f97316';   // Orange - At Risk
+    case 'high': return '#eab308';      // Yellow - High Risk
+    case 'medium': return '#3b82f6';    // Blue - Medium Risk
+    case 'low': return '#22c55e';       // Green - Low Risk/Normal
     default: return '#9ca3af';
   }
 };
 
 const determineStatus = (order) => {
-  if (order.status === 'Blocked' || order.status === 'Delayed' || order.status === 'exception') return 'blocked';
-  if (order.delay_risk === 'At risk' || order.delay_risk === 'Delayed') return 'risk';
-  return 'normal';
+  const risk = order.delay_risk ? String(order.delay_risk).trim() : '';
+  const status = order.status ? String(order.status).trim() : '';
+
+  // Check delay_risk field first (most specific)
+  if (risk === 'At risk' || risk === 'At Risk') return 'at-risk';
+  if (risk === 'High') return 'high';
+  if (risk === 'Medium') return 'medium';
+  if (risk === 'Low') return 'low';
+
+  // Then check for stopped/blocked status
+  if (status === 'Blocked' || status === 'exception') return 'stopped';
+
+  // Default to low
+  return 'low';
 };
 
 function MapBounds({ sites }) {
@@ -114,7 +127,9 @@ export default function MapWidget() {
     tech: order.technician_team || order.subcontractor || "Unassigned",
     pm: order.project_manager,
     startDate: order.project_start_date || order.created_date?.split('T')[0],
-    error: order.status === 'Blocked' ? "Installation Blocked" : (order.delay_risk === 'At risk' ? "High Risk: Schedule Slip" : null),
+    error: order.status === 'Blocked' ? "Installation Blocked" :
+      (order.delay_risk === 'At risk' ? "High Risk: Schedule Slip" :
+        (order.delay_risk === 'High' ? "Severe Risk: Action Needed" : null)),
     geoStatus: order.geocoding_status,
     rawOrder: order
   })) || [];
@@ -134,9 +149,11 @@ export default function MapWidget() {
             <p className="text-xs text-gray-500">Real-time operational status across active sites</p>
           </div>
           <div className="flex items-center gap-3 text-xs">
-            <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-red-500" /> Stopped</div>
-            <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-yellow-500" /> At Risk</div>
-            <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-blue-500" /> Normal</div>
+            <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#dc2626' }} /> Stopped</div>
+            <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#f97316' }} /> At Risk</div>
+            <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#eab308' }} /> High</div>
+            <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#3b82f6' }} /> Medium</div>
+            <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#22c55e' }} /> Low</div>
           </div>
         </div>
       </CardHeader>
@@ -164,7 +181,7 @@ export default function MapWidget() {
                 fillColor: getColor(site.status),
                 fillOpacity: 0.8,
                 weight: 2,
-                radius: 4
+                radius: 6
               }}
             >
               <Popup>
@@ -174,9 +191,11 @@ export default function MapWidget() {
                       {site.id} - {site.address}
                     </span>
                     <div className="flex-shrink-0">
-                      {site.status === 'blocked' && <AlertOctagon className="w-4 h-4 text-red-500" />}
-                      {site.status === 'risk' && <AlertTriangle className="w-4 h-4 text-yellow-500" />}
-                      {site.status === 'normal' && <CheckCircle2 className="w-4 h-4 text-blue-500" />}
+                      {site.status === 'stopped' && <AlertOctagon className="w-4 h-4 text-red-600" />}
+                      {site.status === 'at-risk' && <AlertTriangle className="w-4 h-4 text-orange-500" />}
+                      {site.status === 'high' && <AlertTriangle className="w-4 h-4 text-yellow-500" />}
+                      {site.status === 'medium' && <AlertTriangle className="w-4 h-4 text-blue-500" />}
+                      {site.status === 'low' && <CheckCircle2 className="w-4 h-4 text-green-500" />}
                     </div>
                   </div>
 

@@ -13,9 +13,11 @@ import PageFilter from "@/components/shared/PageFilter";
 export default function SiteOverview() {
   const [searchParams] = useSearchParams();
   const initialStatus = searchParams.get('status');
+  const initialFacilityId = searchParams.get('facility_id');
 
   const [filters, setFilters] = useState({
-    status: initialStatus || 'All',
+    status: initialStatus || 'all',
+    facility_id: initialFacilityId || 'all',
     search: ''
   });
 
@@ -29,6 +31,7 @@ export default function SiteOverview() {
 
     let data = orders.map(order => ({
       id: order.id,
+      orderId: order.order_id, // Added for filtering
       facilityId: order.facility_id,
       progress: order.progress || '0%',
       progressColor: 'bg-blue-100 text-blue-800', // Placeholder
@@ -40,9 +43,25 @@ export default function SiteOverview() {
       status: order.status
     }));
 
-    if (filters.status && filters.status !== 'All') {
-      const statusFilters = filters.status.split(',');
-      data = data.filter(item => statusFilters.includes(item.status));
+    // Filter by Facility ID (handles comma-separated list)
+    if (filters.facility_id && filters.facility_id !== 'all') {
+      const facilityIds = filters.facility_id.split(',');
+      data = data.filter(item => facilityIds.includes(item.facilityId));
+    }
+
+    // Filter by Order ID
+    if (filters.order_id && filters.order_id !== 'all') {
+      data = data.filter(item => item.orderId === filters.order_id);
+    }
+
+    // Filter by Status
+    if (filters.status && filters.status !== 'all') {
+      data = data.filter(item => item.status === filters.status);
+    }
+
+    // Filter by Priority
+    if (filters.priority && filters.priority !== 'all') {
+      data = data.filter(item => String(item.priority) === String(filters.priority));
     }
 
     if (filters.search) {
@@ -63,7 +82,7 @@ export default function SiteOverview() {
           <PageFilter
             filters={filters}
             onFilterChange={setFilters}
-            defaultFilters={{ status: initialStatus }}
+            defaultFilters={{ status: initialStatus, facility_id: initialFacilityId }}
           />
           <div className="flex gap-3">
             <Link to={createPageUrl('FiberOrdering')}>
