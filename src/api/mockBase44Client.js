@@ -155,5 +155,58 @@ export const mockBase44Client = {
         Supplier: createEntityClient('Supplier'),
         Subcontractor: createEntityClient('Subcontractor'),
         WorkOrder: createEntityClient('WorkOrder')
+    },
+    integrations: {
+        Core: {
+            InvokeLLM: async ({ prompt }) => {
+                await delay(800);
+                const p = prompt.toLowerCase();
+
+                // 1. Search for specific IDs (SITE-SE-XX, ORD-XXXX-XX)
+                const siteMatch = prompt.match(/SITE-SE-\d+/i);
+                const orderMatch = prompt.match(/ORD-\d+-\d+/i);
+
+                if (siteMatch) {
+                    const id = siteMatch[0].toUpperCase();
+                    // Search across all relevant collections
+                    const survey = store.SiteSurvey?.find(s => s.facility_id === id);
+                    const order = store.FiberOrder?.find(o => o.facility_id === id);
+                    const design = store.NetworkDesign?.find(d => d.facility_id === id);
+                    const install = store.NaasPreDesign?.find(i => i.facility_id === id); // Assuming NaasPreDesign links to facility
+
+                    if (!survey && !order && !design) return `I couldn't find any records for ${id}.`;
+
+                    let response = `**Data for ${id}:**\n`;
+                    if (order) response += `- **Order:** ${order.order_id} (${order.status})\n`;
+                    if (survey) response += `- **Survey:** ${survey.feasibility} (Surveyor: ${survey.surveyor})\n`;
+                    if (design) response += `- **Design:** ${design.status} (Cost: ${design.estimated_cost})\n`;
+
+                    return response;
+                }
+
+                if (orderMatch) {
+                    const id = orderMatch[0].toUpperCase();
+                    const order = store.FiberOrder?.find(o => o.order_id === id);
+                    if (order) return `**Order ${id}:**\n- Status: ${order.status}\n- Site: ${order.facility_id}\n- Address: ${order.address}`;
+                    return `I couldn't find order ${id}.`;
+                }
+
+                // 2. General Status Queries
+                if (p.includes('how many') || p.includes('count')) {
+                    if (p.includes('orders')) return `There are ${store.FiberOrder?.length || 0} fiber orders in the system.`;
+                    if (p.includes('surveys')) return `There are ${store.SiteSurvey?.length || 0} site surveys recorded.`;
+                    if (p.includes('sites')) return `We are tracking ${store.SiteSurvey?.length || 0} unique sites.`;
+                }
+
+                // 3. Navigation Help
+                if (p.includes('go to') || p.includes('navigate')) {
+                    if (p.includes('survey')) return "You can navigate to the Site Survey page using the sidebar menu.";
+                    if (p.includes('order')) return "The Fiber Ordering page contains all order details.";
+                }
+
+                // Default response
+                return `[Tele2 Assistant] I have access to live data. You can ask me about specific sites (e.g., SITE-SE-01) or orders (e.g., ORD-2025-01).`;
+            }
+        }
     }
 };
