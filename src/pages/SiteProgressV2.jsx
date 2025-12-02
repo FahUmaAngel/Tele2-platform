@@ -38,7 +38,6 @@ export default function SiteProgressV2() {
     const { toast } = useToast();
     const [expandedRows, setExpandedRows] = useState(new Set());
     const [viewMode, setViewMode] = useState('overview'); // 'overview' | 'detailed'
-    const [timeScale, setTimeScale] = useState('week'); // 'week' | 'month'
     
     // Message Modal State
     const [isMessageOpen, setIsMessageOpen] = useState(false);
@@ -59,32 +58,7 @@ export default function SiteProgressV2() {
         dateRange: undefined
     });
 
-    // Timeline configuration based on scale
-    // Align start to the beginning of the current week (Monday)
-    const timelineStart = startOfWeek(new Date(), { weekStartsOn: 1 });
-    timelineStart.setHours(0, 0, 0, 0);
-
-    let timelineDays = 0;
-    let headers = [];
-
-    if (timeScale === 'week') {
-        const timelineWeeks = 28;
-        timelineDays = timelineWeeks * 7;
-        const end = addDays(timelineStart, timelineDays);
-        // Generate weeks
-        for (let i = 0; i <= timelineWeeks; i += 2) {
-            headers.push({ label: `W${i}`, dayIndex: i * 7 });
-        }
-    } else if (timeScale === 'month') {
-        const monthsToShow = 12;
-        const end = addMonths(timelineStart, monthsToShow);
-        timelineDays = differenceInDays(end, timelineStart);
-        const months = eachMonthOfInterval({ start: timelineStart, end });
-        headers = months.map(m => ({
-            label: format(m, 'MMMM'),
-            dayIndex: differenceInDays(m, timelineStart)
-        }));
-    }
+    // Progress-based view - no calendar timeline needed
 
     const { data: fiberOrders } = useQuery({
         queryKey: ['fiber-orders-progress'],
@@ -121,15 +95,31 @@ export default function SiteProgressV2() {
         return fiberOrders.map(order => {
             const startDate = safeDate(order.project_start_date) || safeDate(order.created_date) || new Date();
             
-            // Generate phases based on start date
+            // Create a simple hash from facility_id for consistent variation
+            const hash = order.facility_id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+            
+            // Generate phases with varied durations based on order characteristics
             let currentOffset = 0;
-            const phases = STAGES.map(stage => {
+            const phases = STAGES.map((stage, idx) => {
+                // Add variation to duration based on:
+                // 1. Priority (higher priority = faster phases)
+                // 2. Hash of facility_id (for consistent randomness)
+                // 3. Stage type
+                const priorityFactor = order.priority ? (6 - order.priority) / 5 : 1; // 1-5 priority, inverted
+                const hashVariation = ((hash + idx * 7) % 5) - 2; // -2 to +2 days variation
+                const baseDuration = stage.duration;
+                
+                // Calculate varied duration (keep it reasonable)
+                let variedDuration = Math.round(baseDuration * (0.8 + priorityFactor * 0.4) + hashVariation);
+                variedDuration = Math.max(5, Math.min(25, variedDuration)); // Clamp between 5-25 days
+                
                 const start = addDays(startDate, currentOffset);
-                const end = addDays(start, stage.duration);
-                currentOffset += stage.duration + 2; 
+                const end = addDays(start, variedDuration);
+                currentOffset += variedDuration + 2; 
                 
                 return {
                     ...stage,
+                    duration: variedDuration, // Use varied duration
                     start,
                     end,
                     dayRange: `D${differenceInDays(start, startDate)}-${differenceInDays(end, startDate)}`
@@ -171,7 +161,7 @@ export default function SiteProgressV2() {
 
             return {
                 id: order.facility_id,
-                name: order.address || `Site ${order.facility_id}`,
+                name: `${order.facility_id} - ${order.address || order.facility_id}`,
                 location: order.city || 'Stockholm',
                 status: order.status || 'Planned',
                 priority,
@@ -215,7 +205,7 @@ export default function SiteProgressV2() {
     // Reset to page 1 when filters change
     useEffect(() => {
         setCurrentPage(1);
-    }, [filters, viewMode, timeScale]);
+    }, [filters, viewMode]);
 
     // Pagination Logic
     const totalPages = Math.ceil(sites.length / itemsPerPage);
@@ -234,27 +224,18 @@ export default function SiteProgressV2() {
         }
     }, [viewMode, sites.length]); 
 
-    const getBarPosition = (start, end) => {
-        // Calculate position relative to timelineStart
-        const startDiff = differenceInDays(start, timelineStart);
-        const duration = differenceInDays(end, start);
+    // Calculate phase position as percentage of total project duration
+    const getPhasePosition = (phases, phaseIndex, totalDays) => {
+        let leftPercent = 0;
         
-        let left = (startDiff / timelineDays) * 100;
-        let width = (duration / timelineDays) * 100;
-
-        // Handle clipping if start is before timelineStart
-        if (left < 0) {
-            // Add the negative left value to width to shrink it from the left
-            width += left; 
-            left = 0;
+        // Sum up durations of all previous phases
+        for (let i = 0; i < phaseIndex; i++) {
+            leftPercent += (phases[i].duration / totalDays) * 100;
         }
-
-        // If bar is completely off-screen to the left
-        if (width <= 0) {
-            return null;
-        }
-
-        return { left: `${left}%`, width: `${width}%` };
+        
+        const widthPercent = (phases[phaseIndex].duration / totalDays) * 100;
+        
+        return { left: `${leftPercent}%`, width: `${widthPercent}%` };
     };
 
     // Unique values for filters
@@ -374,21 +355,6 @@ export default function SiteProgressV2() {
 
                     {/* View Controls */}
                     <div className="flex flex-col gap-2 items-end">
-                        {/* Time Scale Toggle */}
-                        <div className="flex items-center bg-gray-100 p-1 rounded-lg border border-gray-200">
-                            <button
-                                onClick={() => setTimeScale('week')}
-                                className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${timeScale === 'week' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                            >
-                                Week
-                            </button>
-                            <button
-                                onClick={() => setTimeScale('month')}
-                                className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${timeScale === 'month' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                            >
-                                Month
-                            </button>
-                        </div>
 
                         {/* View Mode Toggle */}
                         <div className="flex items-center bg-gray-100 p-1 rounded-lg border border-gray-200">
@@ -438,8 +404,6 @@ export default function SiteProgressV2() {
                 <div className="space-y-4">
                     {paginatedSites.map(site => {
                         const isExpanded = expandedRows.has(site.id);
-                        const installDayIndex = differenceInDays(site.installDate, timelineStart);
-                        const installLeft = (installDayIndex / timelineDays) * 100;
 
                         return (
                             <Card key={site.id} className="overflow-hidden border-gray-200 shadow-sm">
@@ -457,10 +421,9 @@ export default function SiteProgressV2() {
                                         </Button>
                                         
                                         <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2">
-                                                <div className="font-semibold text-gray-900 truncate">{site.name}</div>
-                                            </div>
-                                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                                            <div className="font-semibold text-sm text-gray-900 truncate">{site.id}</div>
+                                            <div className="text-xs text-gray-600 truncate">{site.raw.address || site.id}</div>
+                                            <div className="flex items-center gap-2 text-[10px] text-gray-500 mt-0.5">
                                                 <span className="truncate">{site.location}</span>
                                                 <span className="w-1 h-1 rounded-full bg-gray-300" />
                                                 <span className={`font-medium ${site.priority === 'High' ? 'text-red-500' : site.priority === 'Medium' ? 'text-amber-500' : 'text-blue-500'}`}>
@@ -475,26 +438,25 @@ export default function SiteProgressV2() {
                                         </div>
                                     </div>
 
-                                    {/* Gantt Area */}
+                                    {/* Progress Bar Area */}
                                     <div className="flex-1 h-full relative px-4 overflow-hidden">
-                                        {/* Grid Lines */}
+                                        {/* Percentage markers */}
                                         <div className="absolute inset-0 flex pointer-events-none">
-                                            {headers.map((h, i) => (
+                                            {[0, 25, 50, 75, 100].map((percent) => (
                                                 <div 
-                                                    key={i} 
-                                                    className="absolute h-full border-r border-gray-100 transform -translate-x-1/2"
-                                                    style={{ left: `${(h.dayIndex / timelineDays) * 100}%` }}
+                                                    key={percent} 
+                                                    className="absolute h-full border-r border-gray-100"
+                                                    style={{ left: `${percent}%` }}
                                                 />
                                             ))}
                                         </div>
 
-                                        {/* Overview Bars */}
+                                        {/* Phase Bars */}
                                         <div className="absolute inset-y-0 left-0 right-0 flex items-center">
                                             {site.phases.map((phase, idx) => {
-                                                const pos = getBarPosition(phase.start, phase.end);
-                                                if (!pos) return null; // Skip if off-screen
-
-                                                const isCompleted = phase.end < site.currentProgressDate;
+                                                const pos = getPhasePosition(site.phases, idx, site.totalDays);
+                                                const phaseProgressPercent = ((idx + 1) / site.phases.length) * 100;
+                                                const isCompleted = site.progress >= phaseProgressPercent;
                                                 const opacityClass = isCompleted ? 'opacity-40' : 'opacity-90 hover:opacity-100';
 
                                                 return (
@@ -511,6 +473,9 @@ export default function SiteProgressV2() {
                                                                 <p className="text-gray-500">
                                                                     {format(phase.start, 'MMM d, yyyy')} - {format(phase.end, 'MMM d, yyyy')}
                                                                 </p>
+                                                                <p className="text-gray-400 text-[10px] mt-1">
+                                                                    Duration: {phase.duration} days
+                                                                </p>
                                                             </div>
                                                         </PopoverContent>
                                                     </Popover>
@@ -518,32 +483,18 @@ export default function SiteProgressV2() {
                                             })}
                                             
                                             {/* Blue Progress Line */}
-                                            {(() => {
-                                                const progressPos = getBarPosition(site.currentProgressDate, site.currentProgressDate);
-                                                // getBarPosition returns width 0 for same start/end, so we need to calculate left manually or adjust getBarPosition
-                                                // Actually getBarPosition returns { left: '...', width: '...' }
-                                                // Let's just calculate left manually to be safe and simple
-                                                const progressDiff = differenceInDays(site.currentProgressDate, timelineStart);
-                                                const progressLeft = (progressDiff / timelineDays) * 100;
-                                                
-                                                if (progressLeft >= 0 && progressLeft <= 100) {
-                                                    return (
-                                                        <div 
-                                                            className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-30 shadow-[0_0_4px_rgba(59,130,246,0.5)]"
-                                                            style={{ left: `${progressLeft}%` }}
-                                                        />
-                                                    );
-                                                }
-                                                return null;
-                                            })()}
-                                            
-                                            {/* Red Hard Stop Line */}
-                                            {installLeft >= 0 && installLeft <= 100 && (
+                                            {site.progress < 100 && (
                                                 <div 
-                                                    className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-20"
-                                                    style={{ left: `${installLeft}%` }}
+                                                    className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-30 shadow-[0_0_4px_rgba(59,130,246,0.5)]"
+                                                    style={{ left: `${Math.min(100, Math.max(0, site.progress))}%` }}
                                                 />
                                             )}
+                                            
+                                            {/* Red Install Date Line */}
+                                            <div 
+                                                className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-20"
+                                                style={{ left: '100%' }}
+                                            />
                                         </div>
                                     </div>
 
@@ -572,7 +523,6 @@ export default function SiteProgressV2() {
                                 {isExpanded && (
                                     <div className="border-t border-gray-100 bg-white">
                                         {site.phases.map((phase, idx) => {
-                                            const pos = getBarPosition(phase.start, phase.end);
                                             const isCompleted = site.progress > ((idx + 1) / site.phases.length) * 100; 
 
                                             return (
@@ -589,53 +539,52 @@ export default function SiteProgressV2() {
                                                         )}
                                                     </div>
 
-                                                    {/* Gantt Bar Row */}
+                                                    {/* Progress Bar Row */}
                                                     <div className="flex-1 h-full relative px-4 overflow-hidden">
-                                                         {/* Grid Lines (faint) */}
+                                                         {/* Percentage markers (faint) */}
                                                         <div className="absolute inset-0 flex pointer-events-none">
-                                                            {headers.map((h, i) => (
+                                                            {[0, 25, 50, 75, 100].map((percent) => (
                                                                 <div 
-                                                                    key={i} 
-                                                                    className="absolute h-full border-r border-gray-50 transform -translate-x-1/2"
-                                                                    style={{ left: `${(h.dayIndex / timelineDays) * 100}%` }}
+                                                                    key={percent} 
+                                                                    className="absolute h-full border-r border-gray-50"
+                                                                    style={{ left: `${percent}%` }}
                                                                 />
                                                             ))}
                                                         </div>
 
-                                                        {pos && (
-                                                            <Popover>
-                                                                <PopoverTrigger asChild>
-                                                                    <div 
-                                                                        className={`absolute top-1/2 -translate-y-1/2 h-5 rounded-md ${phase.color} cursor-pointer ${phase.end < site.currentProgressDate ? 'opacity-40' : 'hover:opacity-90'} transition-opacity`}
-                                                                        style={{ left: pos.left, width: pos.width }}
-                                                                    />
-                                                                </PopoverTrigger>
-                                                                <PopoverContent className="w-auto p-2">
-                                                                    <div className="text-xs">
-                                                                        <p className="font-semibold mb-1">{phase.label}</p>
-                                                                        <p className="text-gray-500">
-                                                                            {format(phase.start, 'MMM d, yyyy')} - {format(phase.end, 'MMM d, yyyy')}
-                                                                        </p>
-                                                                    </div>
-                                                                </PopoverContent>
-                                                            </Popover>
-                                                        )}
+                                                        <Popover>
+                                                            <PopoverTrigger asChild>
+                                                                <div 
+                                                                    className={`absolute top-1/2 -translate-y-1/2 h-5 rounded-md ${phase.color} cursor-pointer ${isCompleted ? 'opacity-40' : 'hover:opacity-90'} transition-opacity`}
+                                                                    style={{ left: getPhasePosition(site.phases, idx, site.totalDays).left, width: getPhasePosition(site.phases, idx, site.totalDays).width }}
+                                                                />
+                                                            </PopoverTrigger>
+                                                            <PopoverContent className="w-auto p-2">
+                                                                <div className="text-xs">
+                                                                    <p className="font-semibold mb-1">{phase.label}</p>
+                                                                    <p className="text-gray-500">
+                                                                        {format(phase.start, 'MMM d, yyyy')} - {format(phase.end, 'MMM d, yyyy')}
+                                                                    </p>
+                                                                    <p className="text-gray-400 text-[10px] mt-1">
+                                                                        Duration: {phase.duration} days
+                                                                    </p>
+                                                                </div>
+                                                            </PopoverContent>
+                                                        </Popover>
                                                         
                                                         {/* Blue Progress Line in Detailed View */}
-                                                        {(() => {
-                                                            const progressDiff = differenceInDays(site.currentProgressDate, timelineStart);
-                                                            const progressLeft = (progressDiff / timelineDays) * 100;
-                                                            
-                                                            if (progressLeft >= 0 && progressLeft <= 100) {
-                                                                return (
-                                                                    <div 
-                                                                        className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-30 shadow-[0_0_4px_rgba(59,130,246,0.5)]"
-                                                                        style={{ left: `${progressLeft}%` }}
-                                                                    />
-                                                                );
-                                                            }
-                                                            return null;
-                                                        })()}
+                                                        {site.progress < 100 && (
+                                                            <div 
+                                                                className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-30 shadow-[0_0_4px_rgba(59,130,246,0.5)]"
+                                                                style={{ left: `${Math.min(100, Math.max(0, site.progress))}%` }}
+                                                            />
+                                                        )}
+                                                        
+                                                        {/* Red Install Date Line in Detailed View */}
+                                                        <div 
+                                                            className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-20"
+                                                            style={{ left: '100%' }}
+                                                        />
                                                     </div>
 
                                                     {/* Right Info */}

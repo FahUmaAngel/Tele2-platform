@@ -8,6 +8,34 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Sparkles, Save, ArrowRight } from "lucide-react";
 
+// Helper function to infer location type from fiberOrder data
+const inferLocationType = (fiberOrder) => {
+  if (!fiberOrder) return "Office";
+  
+  // Map install_type to location_type
+  const installTypeMap = {
+    "Underground": "Office Building",
+    "Indoor": "Office",
+    "Facade": "Retail Store",
+    "Aerial": "Warehouse"
+  };
+  
+  // Check client name for additional context
+  const client = fiberOrder.client?.toLowerCase() || "";
+  if (client.includes("hospital")) return "Hospital";
+  if (client.includes("university") || client.includes("campus")) return "University Campus";
+  if (client.includes("datacenter") || client.includes("data center")) return "Datacenter";
+  if (client.includes("warehouse")) return "Warehouse";
+  if (client.includes("retail") || client.includes("store")) return "Retail Store";
+  if (client.includes("government")) return "Government Office";
+  if (client.includes("port")) return "Port Authority";
+  if (client.includes("research")) return "Research Park";
+  if (client.includes("residential") || client.includes("apartment")) return "Residential Complex";
+  
+  // Fall back to install_type mapping
+  return installTypeMap[fiberOrder.install_type] || "Office";
+};
+
 export default function PreDesignForm({ initialData, fiberOrder, orderId: filterOrderId, onSubmit, isGenerating, onGenerateAI }) {
   const { register, handleSubmit, setValue, watch, reset } = useForm({
     defaultValues: {
@@ -28,18 +56,19 @@ export default function PreDesignForm({ initialData, fiberOrder, orderId: filter
   React.useEffect(() => {
     const targetOrderId = filterOrderId || initialData?.order_id || fiberOrder?.order_id || "";
 
-    // Prioritize initialData if it exists
+    // Prioritize initialData if it exists (user has already saved preferences)
     if (initialData) {
       reset({
         site_category: initialData.site_category || "Medium",
-        location_type: initialData.location_type || "Office",
+        location_type: initialData.location_type || inferLocationType(fiberOrder),
         customer_requirements: initialData.customer_requirements || "",
         order_id: targetOrderId
       });
     } else if (fiberOrder) {
+      // Auto-populate from fiberOrder data
       reset({
         site_category: fiberOrder.category || "Medium",
-        location_type: "Office",
+        location_type: inferLocationType(fiberOrder),
         customer_requirements: fiberOrder.requirements || "",
         order_id: targetOrderId
       });
