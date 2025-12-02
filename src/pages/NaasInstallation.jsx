@@ -219,9 +219,11 @@ export default function NaasInstallation() {
             >
               {replanNeeded ? "Replanning Required" : "AI Replan"}
             </Button>
-            <Button variant="outline" onClick={() => setIsTimelineOpen(true)}>
-              <Clock className="w-4 h-4 mr-2" /> Workflow Timeline
-            </Button>
+            <Link to={`${createPageUrl('OrderProcessing')}?siteId=${siteId}${orderId ? `&orderId=${orderId}` : ''}`}>
+              <Button variant="outline">
+                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Order Processing
+              </Button>
+            </Link>
             <Button
               className="bg-[#0a1f33] hover:bg-[#153250]"
               onClick={handleCompleteInstallation}
