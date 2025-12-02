@@ -45,6 +45,10 @@ export default function SiteProgressV2() {
     const [activeMessageSite, setActiveMessageSite] = useState(null);
     const [messageText, setMessageText] = useState('');
 
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
     // Filters State
     const [filters, setFilters] = useState({
         search: '',
@@ -134,11 +138,34 @@ export default function SiteProgressV2() {
 
             const installDate = phases[phases.length - 1].end;
             const totalDays = differenceInDays(installDate, startDate);
-            const progress = Math.floor(Math.random() * 80) + 10; 
             
-            // Mock Priority
-            const priorities = ['High', 'Medium', 'Low'];
-            const priority = priorities[Math.floor(Math.random() * priorities.length)];
+            // Use actual progress from order data, or calculate from status
+            let progress = 0;
+            if (order.progress) {
+                // If progress field exists, parse it (e.g., "45%")
+                progress = parseInt(order.progress) || 0;
+            } else {
+                // Otherwise, estimate from status
+                const statusProgress = {
+                    'Completed': 100,
+                    'Delivered': 90,
+                    'In Transit': 70,
+                    'Confirming': 50,
+                    'Delayed': 30,
+                    'pending': 10
+                };
+                progress = statusProgress[order.status] || 20;
+            }
+            
+            // Use actual priority from order data
+            const priorityMap = {
+                1: 'High',
+                2: 'High',
+                3: 'Medium',
+                4: 'Low',
+                5: 'Low'
+            };
+            const priority = priorityMap[order.priority] || 'Medium';
 
             const currentProgressDate = addDays(startDate, Math.floor((progress / 100) * totalDays));
 
@@ -184,6 +211,18 @@ export default function SiteProgressV2() {
             return true;
         });
     }, [fiberOrders, filters]);
+
+    // Reset to page 1 when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filters, viewMode, timeScale]);
+
+    // Pagination Logic
+    const totalPages = Math.ceil(sites.length / itemsPerPage);
+    const paginatedSites = sites.slice(
+        (currentPage - 1) * itemsPerPage, 
+        currentPage * itemsPerPage
+    );
 
     // Handle View Mode Change
     useEffect(() => {
@@ -382,8 +421,8 @@ export default function SiteProgressV2() {
                     ))}
                 </div>
 
-                {/* Timeline Header */}
-                <div className="flex mb-4 pl-[300px] pr-12 relative text-xs text-gray-500 font-medium border-b border-gray-200 pb-2 h-8">
+                {/* Timeline Header - REMOVED as per request */}
+                {/* <div className="flex mb-4 pl-[300px] pr-12 relative text-xs text-gray-500 font-medium border-b border-gray-200 pb-2 h-8">
                     {headers.map((h, i) => (
                         <div 
                             key={i} 
@@ -394,10 +433,10 @@ export default function SiteProgressV2() {
                             {h.subLabel && <span className="text-[10px] text-gray-400">{h.subLabel}</span>}
                         </div>
                     ))}
-                </div>
+                </div> */}
 
                 <div className="space-y-4">
-                    {sites.map(site => {
+                    {paginatedSites.map(site => {
                         const isExpanded = expandedRows.has(site.id);
                         const installDayIndex = differenceInDays(site.installDate, timelineStart);
                         const installLeft = (installDayIndex / timelineDays) * 100;
@@ -612,6 +651,55 @@ export default function SiteProgressV2() {
                         );
                     })}
                 </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 rounded-lg shadow-sm">
+                        <div className="flex flex-1 justify-between sm:hidden">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                            >
+                                Previous
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages}
+                            >
+                                Next
+                            </Button>
+                        </div>
+                        <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                            <div>
+                                <p className="text-sm text-gray-700">
+                                    Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-medium">{Math.min(currentPage * itemsPerPage, sites.length)}</span> of <span className="font-medium">{sites.length}</span> results
+                                </p>
+                            </div>
+                            <div className="flex gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    disabled={currentPage === 1}
+                                >
+                                    Previous
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={currentPage === totalPages}
+                                >
+                                    Next
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Message Modal */}
                 <Dialog open={isMessageOpen} onOpenChange={setIsMessageOpen}>
