@@ -24,29 +24,29 @@ export function parseFacilitySuffix(facilityId) {
         return null;
     }
 
-    // Match pattern: SITE-{2 letters}-{3 digits}
-    const match = facilityId.match(/^SITE-[A-Z]{2}-(\d{3})$/);
+    // Match pattern: SITE-{2 letters}-{2 or more digits}
+    const match = facilityId.match(/^SITE-[A-Z]{2}-(\d{2,})$/);
 
     if (!match) {
-        console.warn(`Invalid FacilityID format: ${facilityId}. Expected: SITE-XX-NNN`);
+        console.warn(`Invalid FacilityID format: ${facilityId}. Expected: SITE-XX-NN`);
         return null;
     }
 
-    return match[1]; // Return the 3-digit suffix
+    return match[1]; // Return the numeric suffix
 }
 
 /**
  * Generate OrderID from numeric suffix
- * @param {string} suffix - 3-digit numeric suffix
+ * @param {string} suffix - numeric suffix
  * @returns {string} - Generated OrderID
  * 
  * Examples:
- *   generateOrderID("011") → "ORD-2025-011"
+ *   generateOrderID("11") → "ORD-2025-11"
  *   generateOrderID("204") → "ORD-2025-204"
  */
 export function generateOrderID(suffix) {
-    if (!suffix || !/^\d{3}$/.test(suffix)) {
-        throw new Error(`Invalid suffix: ${suffix}. Must be 3 digits.`);
+    if (!suffix || !/^\d{2,}$/.test(suffix)) {
+        throw new Error(`Invalid suffix: ${suffix}. Must be at least 2 digits.`);
     }
 
     return `ORD-2025-${suffix}`;
@@ -59,8 +59,8 @@ export function generateOrderID(suffix) {
  * @returns {Object} - { valid: boolean, error: string|null, suffix: string|null }
  * 
  * Examples:
- *   validatePair("SITE-SE-011", "ORD-2025-011") → { valid: true, error: null, suffix: "011" }
- *   validatePair("SITE-SE-011", "ORD-2025-999") → { valid: false, error: "...", suffix: null }
+ *   validatePair("SITE-SE-11", "ORD-2025-11") → { valid: true, error: null, suffix: "11" }
+ *   validatePair("SITE-SE-11", "ORD-2025-99") → { valid: false, error: "...", suffix: null }
  */
 export function validatePair(facilityId, orderId) {
     // Extract facility suffix
@@ -69,7 +69,7 @@ export function validatePair(facilityId, orderId) {
     if (!facilitySuffix) {
         return {
             valid: false,
-            error: `Invalid FacilityID format: "${facilityId}". Expected format: SITE-XX-NNN (e.g., SITE-SE-011)`,
+            error: `Invalid FacilityID format: "${facilityId}". Expected format: SITE-XX-NN (e.g., SITE-SE-11)`,
             suffix: null
         };
     }
@@ -83,12 +83,12 @@ export function validatePair(facilityId, orderId) {
         };
     }
 
-    const orderMatch = orderId.match(/^ORD-2025-(\d{3})$/);
+    const orderMatch = orderId.match(/^ORD-2025-(\d{2,})$/);
 
     if (!orderMatch) {
         return {
             valid: false,
-            error: `Invalid OrderID format: "${orderId}". Expected format: ORD-2025-NNN (e.g., ORD-2025-011)`,
+            error: `Invalid OrderID format: "${orderId}". Expected format: ORD-2025-NN (e.g., ORD-2025-11)`,
             suffix: null
         };
     }
@@ -120,8 +120,8 @@ export function validatePair(facilityId, orderId) {
  * @returns {Object} - { success: boolean, orderId: string|null, error: string|null }
  * 
  * Examples:
- *   autoBindIDs("SITE-SE-011", []) → { success: true, orderId: "ORD-2025-011", error: null }
- *   autoBindIDs("SITE-SE-011", [{ order_id: "ORD-2025-011" }]) → { success: false, orderId: null, error: "..." }
+ *   autoBindIDs("SITE-SE-11", []) → { success: true, orderId: "ORD-2025-11", error: null }
+ *   autoBindIDs("SITE-SE-11", [{ order_id: "ORD-2025-11" }]) → { success: false, orderId: null, error: "..." }
  */
 export function autoBindIDs(facilityId, existingOrders = []) {
     // Extract suffix
@@ -184,11 +184,11 @@ export function validateFacilityUniqueness(facilityId, existingOrders = []) {
  * Get next available suffix for a given country code
  * @param {string} countryCode - 2-letter country code (e.g., "SE", "NO")
  * @param {Array} existingOrders - Array of existing order objects
- * @returns {string} - Next available 3-digit suffix
+ * @returns {string} - Next available 2-digit suffix
  * 
  * Examples:
- *   getNextSuffix("SE", [{ facility_id: "SITE-SE-001" }]) → "002"
- *   getNextSuffix("NO", []) → "001"
+ *   getNextSuffix("SE", [{ facility_id: "SITE-SE-01" }]) → "02"
+ *   getNextSuffix("NO", []) → "01"
  */
 export function getNextSuffix(countryCode, existingOrders = []) {
     const prefix = `SITE-${countryCode.toUpperCase()}-`;
@@ -201,14 +201,14 @@ export function getNextSuffix(countryCode, existingOrders = []) {
         .map(suffix => parseInt(suffix, 10));
 
     if (countryFacilities.length === 0) {
-        return "001";
+        return "01";
     }
 
     const maxSuffix = Math.max(...countryFacilities);
     const nextSuffix = maxSuffix + 1;
 
-    // Pad to 3 digits
-    return String(nextSuffix).padStart(3, '0');
+    // Pad to 2 digits to match existing data format
+    return String(nextSuffix).padStart(2, '0');
 }
 
 /**

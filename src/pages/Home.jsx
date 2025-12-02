@@ -21,7 +21,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50/50 pb-24">
       <div className="p-6 md:p-8 max-w-[1600px] mx-auto space-y-6">
-        
+
         {/* Page Header & Role Toggle */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
@@ -30,10 +30,10 @@ export default function Home() {
               Welcome back, Amin. Here's your operational overview for today.
             </p>
           </div>
-          
-          <div className="flex items-center gap-3 bg-white p-2 rounded-lg border shadow-sm">
+
+          <div className="hidden items-center gap-3 bg-white p-2 rounded-lg border shadow-sm">
             <span className={`text-sm font-medium ${role === 'operator' ? 'text-blue-600' : 'text-gray-500'}`}>Operator View</span>
-            <Switch 
+            <Switch
               checked={role === 'manager'}
               onCheckedChange={(checked) => setRole(checked ? 'manager' : 'operator')}
             />
@@ -53,7 +53,7 @@ export default function Home() {
           </div> */}
 
           {/* Row 1: Map - Taking center stage */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
             className="xl:col-span-8 xl:row-span-2 min-h-[500px]"
           >
@@ -62,28 +62,28 @@ export default function Home() {
 
           {/* Side Column: Alerts & Schedule */}
           <div className="xl:col-span-4 space-y-6">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}
             >
               <AlertsPanel />
             </motion.div>
 
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}
             >
               <ActivitySchedule />
             </motion.div>
-            </div>
+          </div>
 
-            {/* Row 2: Analytics */}
-            <motion.div 
-             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-             className="xl:col-span-12"
-            >
-             <RFSProgressOverview />
-            </motion.div>
+          {/* Row 2: Analytics */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+            className="xl:col-span-12"
+          >
+            <RFSProgressOverview />
+          </motion.div>
 
-            {/* Hidden Components */}
+          {/* Hidden Components */}
           {/* <div className="xl:col-span-1 space-y-6">
             {role === 'manager' && (
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }}>
