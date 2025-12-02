@@ -233,7 +233,7 @@ export default function NaasInstallation() {
       </div>
 
       {/* Workflow Timeline */}
-      <WorkflowTimeline currentStep={6} />
+      <WorkflowTimeline currentStep={6} siteId={siteId} orderId={orderId} />
 
       {/* SECTION 2 â€” Overview & Status */}
       <InstallationOverview siteId={siteId} orderId={orderId} />
