@@ -8,6 +8,8 @@ import siteSurveyCsv from '@/data/SiteSurvey.csv?raw';
 import supplierCsv from '@/data/Supplier.csv?raw';
 import subcontractorCsv from '@/data/Subcontractor.csv?raw';
 import workOrderCsv from '@/data/WorkOrder.csv?raw';
+import naasInstallationDataCsv from '@/data/NaasInstallationData.csv?raw';
+import rfsReportCsv from '@/data/RfsReport.csv?raw';
 
 // Helper to try parsing JSON
 const tryParseJson = (value) => {
@@ -35,7 +37,7 @@ const processEntityData = (data, jsonFields = []) => {
 
 // In-memory store to simulate database, with localStorage persistence
 const loadStore = () => {
-    const saved = localStorage.getItem('tele2_mock_db_v2');
+    const saved = localStorage.getItem('tele2_mock_db_v4');
     if (saved) {
         return JSON.parse(saved);
     }
@@ -57,14 +59,16 @@ const loadStore = () => {
         SiteSurvey: parseCsv(siteSurveyCsv),
         Supplier: parseCsv(supplierCsv),
         Subcontractor: parseCsv(subcontractorCsv),
-        WorkOrder: parseCsv(workOrderCsv)
+        WorkOrder: parseCsv(workOrderCsv),
+        NaasInstallationData: parseCsv(naasInstallationDataCsv),
+        RfsReport: parseCsv(rfsReportCsv)
     };
 };
 
 const store = loadStore();
 
 const saveStore = () => {
-    localStorage.setItem('tele2_mock_db_v2', JSON.stringify(store));
+    localStorage.setItem('tele2_mock_db_v4', JSON.stringify(store));
 };
 
 // Helper to simulate async delay
@@ -165,7 +169,9 @@ export const mockBase44Client = {
         SiteSurvey: createEntityClient('SiteSurvey'),
         Supplier: createEntityClient('Supplier'),
         Subcontractor: createEntityClient('Subcontractor'),
-        WorkOrder: createEntityClient('WorkOrder')
+        WorkOrder: createEntityClient('WorkOrder'),
+        NaasInstallationData: createEntityClient('NaasInstallationData'),
+        RfsReport: createEntityClient('RfsReport')
     },
     integrations: {
         Core: {
