@@ -392,8 +392,10 @@ export default function OrderProcessing() {
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Link to={`${createPageUrl('NaasInstallation')}?siteId=${siteId}`}>
-                            <Button className="w-full bg-[#0a1f33]">Proceed to Installation Dashboard</Button>
+                        <Link to={`${createPageUrl('Rfs')}?siteId=${siteId}${fiberOrder?.order_id ? `&orderId=${fiberOrder.order_id}` : ''}`}>
+                            <Button className="w-full bg-[#0a1f33]">
+                                Proceed to RFS Dashboard <ArrowRight className="w-4 h-4 ml-2" />
+                            </Button>
                         </Link>
                     </DialogFooter>
                 </DialogContent>

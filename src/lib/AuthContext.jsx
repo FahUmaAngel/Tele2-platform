@@ -133,9 +133,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const login = (userData) => {
+    setUser(userData);
+    setIsAuthenticated(true);
+    setAuthError(null);
+  };
+
   const navigateToLogin = () => {
-    // Use the SDK's redirectToLogin method
-    base44.auth.redirectToLogin(window.location.href);
+    // Redirect to local login page
+    window.location.href = '/Login';
   };
 
   return (
@@ -146,6 +152,7 @@ export const AuthProvider = ({ children }) => {
       isLoadingPublicSettings,
       authError,
       appPublicSettings,
+      login,
       logout,
       navigateToLogin,
       checkAppState

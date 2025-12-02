@@ -456,8 +456,8 @@ export default function FiberOrdering() {
                         </Button>
                         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                             <DialogTrigger asChild>
-                                <Button className="bg-[#0a1f33] hover:bg-[#153250]">
-                                    <Plus className="w-4 h-4 mr-2" /> New Order
+                                <Button className="bg-[#0a1f33] hover:bg-[#153250]" onClick={() => setIsCreateOpen(true)}>
+                                    <Plus className="w-4 h-4 mr-2" /> Create Order
                                 </Button>
                             </DialogTrigger>
                             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
