@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Receipt, DollarSign, CalendarClock, Send, CheckCircle2, Loader2 } from "lucide-react";
+import { Receipt, DollarSign, CheckCircle2, Loader2 } from "lucide-react";
 
-export default function InvoicingPanel({ status, onGenerateInvoice, rfsReady }) {
+export default function InvoicingPanel({ status, onGenerateInvoice, rfsReady, fiberOrder, rfsReport }) {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleInvoice = () => {
@@ -15,12 +15,44 @@ export default function InvoicingPanel({ status, onGenerateInvoice, rfsReady }) 
     }, 2000);
   };
 
-  const milestones = [
-    { name: "Order Confirmation", amount: "20%", status: "paid" },
-    { name: "Equipment Delivery", amount: "30%", status: "paid" },
-    { name: "Installation Completion", amount: "30%", status: "pending" },
-    { name: "RFS Acceptance", amount: "20%", status: "pending" }
-  ];
+  // Dynamic milestone calculation based on actual order status
+  const getMilestoneStatus = () => {
+    const orderExists = !!fiberOrder?.id;
+    const hasDeliveryConfirmed = !!fiberOrder?.delivery_conf_date || fiberOrder?.status === 'Delivered' || fiberOrder?.status === 'Confirming';
+    const installationComplete = fiberOrder?.status === 'completed' || fiberOrder?.status === 'installation_scheduled' || fiberOrder?.status === 'Delivered';
+    const rfsAccepted = !!rfsReport?.customer_signature;
+
+    return [
+      { 
+        name: "Order Confirmation", 
+        amount: "20%", 
+        status: orderExists ? "paid" : "pending",
+        description: "Initial order placed"
+      },
+      { 
+        name: "Equipment Delivery", 
+        amount: "30%", 
+        status: hasDeliveryConfirmed ? "paid" : "pending",
+        description: "Fiber equipment delivered"
+      },
+      { 
+        name: "Installation Completion", 
+        amount: "30%", 
+        status: installationComplete ? "paid" : "pending",
+        description: "On-site installation finished"
+      },
+      { 
+        name: "RFS Acceptance", 
+        amount: "20%", 
+        status: rfsAccepted ? "paid" : "pending",
+        description: "Customer sign-off received"
+      }
+    ];
+  };
+
+  const milestones = getMilestoneStatus();
+  const totalPaid = milestones.filter(m => m.status === 'paid').reduce((sum, m) => sum + parseInt(m.amount), 0);
+  const remainingPercentage = 100 - totalPaid;
 
   return (
     <Card className="h-full">
@@ -37,7 +69,10 @@ export default function InvoicingPanel({ status, onGenerateInvoice, rfsReady }) 
               <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
                 <div className="flex items-center gap-3">
                   <div className={`w-2 h-2 rounded-full ${m.status === 'paid' ? 'bg-green-500' : 'bg-gray-300'}`} />
-                  <span className="font-medium text-sm">{m.name}</span>
+                  <div>
+                    <span className="font-medium text-sm block">{m.name}</span>
+                    <span className="text-xs text-gray-500">{m.description}</span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-bold text-gray-700">{m.amount}</span>
@@ -54,11 +89,17 @@ export default function InvoicingPanel({ status, onGenerateInvoice, rfsReady }) 
 
         <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-blue-800">Total Remaining</span>
-            <span className="text-lg font-bold text-blue-900">12,500.00 SEK</span>
+            <span className="text-sm font-medium text-blue-800">Total Paid</span>
+            <span className="text-lg font-bold text-blue-900">{totalPaid}%</span>
+          </div>
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-sm font-medium text-blue-800">Remaining</span>
+            <span className="text-lg font-bold text-blue-900">{remainingPercentage}%</span>
           </div>
           <p className="text-xs text-blue-600">
-            Invoice #INV-2024-001 will be generated automatically upon RFS completion.
+            {remainingPercentage > 0 
+              ? `Invoice for remaining ${remainingPercentage}% will be generated upon RFS completion.`
+              : 'All milestones completed. Ready for final invoice.'}
           </p>
         </div>
       </CardContent>
