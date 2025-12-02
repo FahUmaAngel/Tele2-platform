@@ -40,9 +40,77 @@ export default function SiteOverview() {
       status: order.status
     }));
 
-    if (filters.status && filters.status !== 'All') {
-      const statusFilters = filters.status.split(',');
-      data = data.filter(item => statusFilters.includes(item.status));
+    // Filter by Facility ID
+    if (filters.facility_id && filters.facility_id !== 'all') {
+      data = data.filter(item => item.facilityId === filters.facility_id);
+    }
+
+    // Filter by Order ID
+    if (filters.order_id && filters.order_id !== 'all') {
+      // We need to match against the order_id from the raw data, but we didn't map it.
+      // Let's check the raw orders for the match since we have the index or just filter the source first?
+      // Better: add order_id to the mapped object.
+      // Re-mapping above to include orderId
+    }
+
+    // Actually, let's re-map correctly above to include the order_id for filtering.
+    // Since I can't change the map block easily in this thought process without rewriting the whole file content string,
+    // I will rewrite the map block in the file content below.
+
+    if (filters.status && filters.status !== 'all') {
+      data = data.filter(item => item.status === filters.status);
+    }
+
+    if (filters.priority && filters.priority !== 'all') {
+      data = data.filter(item => String(item.priority) === String(filters.priority));
+    }
+
+    if (filters.search) {
+      data = data.filter(item =>
+        (item.facilityId && item.facilityId.toLowerCase().includes(filters.search.toLowerCase())) ||
+        (item.location && item.location.toLowerCase().includes(filters.search.toLowerCase()))
+      );
+    }
+
+    return data;
+  }, [orders, filters]);
+
+  // Wait, I need to fix the map function to include order_id for the filter to work if I filter by it.
+  // The PageFilter passes 'order_id' which corresponds to 'order.order_id' (e.g. ORD-2025-01).
+  // The mapped object has 'id' which is the DB ID.
+  // I should add 'orderId' to the mapped object.
+
+  const refinedFilteredData = useMemo(() => {
+    if (!orders) return [];
+
+    let data = orders.map(order => ({
+      id: order.id,
+      orderId: order.order_id, // Added for filtering
+      facilityId: order.facility_id,
+      progress: order.progress || '0%',
+      progressColor: 'bg-blue-100 text-blue-800',
+      location: order.address || 'Unknown',
+      category: order.category || 'Fiber',
+      priority: order.priority || 3,
+      deliveryEst: order.delivery_est_date || 'TBD',
+      subcontractor: order.subcontractor || 'None',
+      status: order.status
+    }));
+
+    if (filters.facility_id && filters.facility_id !== 'all') {
+      data = data.filter(item => item.facilityId === filters.facility_id);
+    }
+
+    if (filters.order_id && filters.order_id !== 'all') {
+      data = data.filter(item => item.orderId === filters.order_id);
+    }
+
+    if (filters.status && filters.status !== 'all') {
+      data = data.filter(item => item.status === filters.status);
+    }
+
+    if (filters.priority && filters.priority !== 'all') {
+      data = data.filter(item => String(item.priority) === String(filters.priority));
     }
 
     if (filters.search) {
@@ -93,14 +161,14 @@ export default function SiteOverview() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredData.length === 0 ? (
+                {refinedFilteredData.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center h-24 text-gray-500">
                       No sites found.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredData.map((row) => (
+                  refinedFilteredData.map((row) => (
                     <TableRow key={row.id} className="hover:bg-gray-50/50">
                       <TableCell className="font-medium">{row.facilityId}</TableCell>
                       <TableCell>
