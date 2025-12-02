@@ -143,6 +143,17 @@ const createEntityClient = (entityName) => ({
     get: async (id) => {
         await delay();
         return store[entityName].find(item => item.id === id);
+    },
+
+    delete: async (id) => {
+        await delay();
+        const index = store[entityName].findIndex(item => item.id === id);
+        if (index === -1) throw new Error(`${entityName} with ID ${id} not found`);
+
+        const deletedItem = store[entityName][index];
+        store[entityName].splice(index, 1);
+        saveStore();
+        return { success: true, deleted: deletedItem };
     }
 });
 
