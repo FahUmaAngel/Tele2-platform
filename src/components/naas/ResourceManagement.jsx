@@ -1,10 +1,10 @@
 import React from 'react';
-import { 
-  Users, 
-  Calendar as CalendarIcon, 
-  MapPin, 
-  Clock, 
-  Sparkles, 
+import {
+  Users,
+  Calendar as CalendarIcon,
+  MapPin,
+  Clock,
+  Sparkles,
   ChevronRight,
   UserPlus,
   CalendarCheck
@@ -28,9 +28,22 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
 
 export default function ResourceManagement({ siteId }) {
   const [date, setDate] = React.useState(new Date());
+
+  // Fetch order data
+  const { data: orders } = useQuery({
+    queryKey: ['fiber-orders', siteId],
+    queryFn: () => base44.entities.FiberOrder.list(),
+    select: (orders) => orders.find(o => o.facility_id === siteId),
+  });
+
+  const scheduledDate = orders?.scheduled_date ? new Date(orders.scheduled_date) : new Date();
+  const technicianTeam = orders?.technician_team || 'Team Alpha';
+  const subcontractor = orders?.subcontractor || 'NordGräv AB';
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -102,7 +115,7 @@ export default function ResourceManagement({ siteId }) {
               </Avatar>
               <div>
                 <p className="text-sm font-semibold text-gray-900">John Doe</p>
-                <p className="text-xs text-gray-500">Field Technician • NordGräv AB</p>
+                <p className="text-xs text-gray-500">Field Technician • {subcontractor}</p>
               </div>
             </div>
             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">On Site</Badge>
@@ -132,7 +145,7 @@ export default function ResourceManagement({ siteId }) {
               <div>
                 <h4 className="text-sm font-semibold text-indigo-900">AI Recommendation</h4>
                 <p className="text-xs text-indigo-700 mt-1">
-                  Based on site complexity, we recommend adding a Fiber Specialist. 
+                  Based on site complexity, we recommend adding a Fiber Specialist.
                   <span className="font-medium ml-1">Marcus L. is available nearby.</span>
                 </p>
                 <Dialog>
@@ -161,7 +174,7 @@ export default function ResourceManagement({ siteId }) {
                           Assign <strong>Marcus L.</strong> (Fiber Specialist) to this site.
                         </p>
                       </div>
-                      
+
                       <div className="space-y-3">
                         <h4 className="text-sm font-medium text-gray-900">Why this recommendation?</h4>
                         <ul className="space-y-2 text-sm text-gray-600">
@@ -181,9 +194,9 @@ export default function ResourceManagement({ siteId }) {
                       </div>
 
                       <DialogFooter className="sm:justify-start">
-                         <Button type="button" variant="secondary" className="w-full bg-indigo-600 text-white hover:bg-indigo-700" onClick={() => alert("Recommendation accepted. Marcus L. assigned.")}>
-                           Accept Recommendation
-                         </Button>
+                        <Button type="button" variant="secondary" className="w-full bg-indigo-600 text-white hover:bg-indigo-700" onClick={() => alert("Recommendation accepted. Marcus L. assigned.")}>
+                          Accept Recommendation
+                        </Button>
                       </DialogFooter>
                     </div>
                   </DialogContent>
@@ -209,7 +222,7 @@ export default function ResourceManagement({ siteId }) {
               <label className="text-xs text-gray-500 font-medium uppercase">Date</label>
               <div className="flex items-center gap-2 text-sm font-semibold">
                 <CalendarIcon className="w-4 h-4 text-gray-400" />
-                {format(date, "MMMM d, yyyy")}
+                {format(scheduledDate, "MMMM d, yyyy")}
               </div>
             </div>
             <div className="space-y-1">
@@ -250,7 +263,7 @@ export default function ResourceManagement({ siteId }) {
                 <h4 className="text-sm font-semibold text-green-900">Optimization Insight</h4>
                 <p className="text-xs text-green-800 mt-1">
                   Weather forecast is clear for the selected date. Fiber readiness confirmed.
-                  <br/>
+                  <br />
                   <span className="font-medium">This slot has a 98% success probability.</span>
                 </p>
               </div>

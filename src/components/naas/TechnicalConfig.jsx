@@ -1,12 +1,12 @@
 import React from 'react';
-import { 
-  Activity, 
-  Server, 
-  Wifi, 
-  ShieldCheck, 
-  Cpu, 
-  Download, 
-  RotateCcw, 
+import {
+  Activity,
+  Server,
+  Wifi,
+  ShieldCheck,
+  Cpu,
+  Download,
+  RotateCcw,
   FileCode,
   Play,
   CheckCircle2,
@@ -24,8 +24,28 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
 
 export default function TechnicalConfig({ siteId }) {
+  // Fetch installation data
+  const { data: installationData } = useQuery({
+    queryKey: ['naas-installation', siteId],
+    queryFn: () => base44.entities.NaasInstallationData.list(),
+    select: (data) => data.find(d => d.facility_id === siteId),
+  });
+
+  const deviceModel = installationData?.device_model || 'Cisco ISR 1100';
+  const deviceSerial = installationData?.device_serial || 'FGL234910XQ';
+  const deviceMac = installationData?.device_mac || '00:1B:44:11:3A:B7';
+  const configStatus = installationData?.config_status || 'Pending';
+  const wifiSsid = installationData?.wifi_ssid || 'Tele2-Guest';
+  const initialWanActive = installationData?.wan_active || false;
+  const initialSecurityApplied = installationData?.security_applied || false;
+  const testLatency = installationData?.test_latency || 14;
+  const testThroughput = installationData?.test_throughput || 940;
+  const testPacketLoss = installationData?.test_packet_loss || 0.0;
+  const testJitter = installationData?.test_jitter || 12;
   const defaultConfig = `interface GigabitEthernet0/0/0
  description WAN_UPLINK
  ip address dhcp
@@ -51,23 +71,23 @@ interface GigabitEthernet0/0/1
  negotiation auto`;
 
   const [config, setConfig] = React.useState(defaultConfig);
-  const [status, setStatus] = React.useState('Pending');
+  const [status, setStatus] = React.useState(configStatus);
   const [isApplying, setIsApplying] = React.useState(false);
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [tempConfig, setTempConfig] = React.useState(config);
   const [isEditOpen, setIsEditOpen] = React.useState(false);
 
   // Activation & Tests State
-  const [wanActive, setWanActive] = React.useState(false);
-  const [securityApplied, setSecurityApplied] = React.useState(false);
+  const [wanActive, setWanActive] = React.useState(initialWanActive);
+  const [securityApplied, setSecurityApplied] = React.useState(initialSecurityApplied);
   const [isRunningTests, setIsRunningTests] = React.useState(false);
   const [testResults, setTestResults] = React.useState({
-    latency: 14,
-    throughput: 940,
-    packetLoss: 0.0,
-    jitter: 12
+    latency: testLatency,
+    throughput: testThroughput,
+    packetLoss: testPacketLoss,
+    jitter: testJitter
   });
-  const [wifiConfig, setWifiConfig] = React.useState({ ssid: "Tele2-Guest", password: "" });
+  const [wifiConfig, setWifiConfig] = React.useState({ ssid: wifiSsid, password: "" });
   const [isWifiOpen, setIsWifiOpen] = React.useState(false);
 
   const handleActivateWan = () => {
@@ -137,8 +157,8 @@ ip route 0.0.0.0 0.0.0.0 dhcp`;
             <Server className="w-5 h-5 text-blue-600" />
             Device Configuration
           </CardTitle>
-          <Badge 
-            variant="outline" 
+          <Badge
+            variant="outline"
             className={`
               ${status === 'Applied' ? 'bg-green-50 text-green-700 border-green-200' : ''}
               ${status === 'Pending' ? 'bg-blue-50 text-blue-700 border-blue-200' : ''}
@@ -152,15 +172,15 @@ ip route 0.0.0.0 0.0.0.0 dhcp`;
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-gray-50 p-4 rounded-lg border border-gray-100">
             <div>
               <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Device Model</div>
-              <div className="font-medium">Cisco ISR 1100</div>
+              <div className="font-medium">{deviceModel}</div>
             </div>
             <div>
               <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Serial Number</div>
-              <div className="font-medium font-mono">FGL234910XQ</div>
+              <div className="font-medium font-mono">{deviceSerial}</div>
             </div>
             <div>
               <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">MAC Address</div>
-              <div className="font-medium font-mono">00:1B:44:11:3A:B7</div>
+              <div className="font-medium font-mono">{deviceMac}</div>
             </div>
             <div>
               <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">License</div>
@@ -188,10 +208,10 @@ ip route 0.0.0.0 0.0.0.0 dhcp`;
                       </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
-                      <Textarea 
-                        value={tempConfig} 
-                        onChange={(e) => setTempConfig(e.target.value)} 
-                        className="font-mono text-xs min-h-[300px]" 
+                      <Textarea
+                        value={tempConfig}
+                        onChange={(e) => setTempConfig(e.target.value)}
+                        className="font-mono text-xs min-h-[300px]"
                       />
                     </div>
                     <DialogFooter>
@@ -199,11 +219,11 @@ ip route 0.0.0.0 0.0.0.0 dhcp`;
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="h-8 text-purple-600 border-purple-200 hover:bg-purple-50" 
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-purple-600 border-purple-200 hover:bg-purple-50"
                   onClick={handleGenerate}
                   disabled={isGenerating}
                 >
@@ -221,17 +241,17 @@ ip route 0.0.0.0 0.0.0.0 dhcp`;
               <pre>{config}</pre>
             </div>
             <div className="flex justify-end gap-2 pt-2">
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={handleRollback}
                 disabled={isApplying || config === previousConfig}
               >
                 <RotateCcw className="w-4 h-4 mr-2" /> Rollback
               </Button>
-              <Button 
-                size="sm" 
-                className="bg-blue-600 hover:bg-blue-700" 
+              <Button
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700"
                 onClick={handleApply}
                 disabled={isApplying || status === 'Applied'}
               >
@@ -295,11 +315,11 @@ ip route 0.0.0.0 0.0.0.0 dhcp`;
                       <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
                           <Label htmlFor="ssid">SSID</Label>
-                          <Input id="ssid" value={wifiConfig.ssid} onChange={(e) => setWifiConfig({...wifiConfig, ssid: e.target.value})} />
+                          <Input id="ssid" value={wifiConfig.ssid} onChange={(e) => setWifiConfig({ ...wifiConfig, ssid: e.target.value })} />
                         </div>
                         <div className="grid gap-2">
                           <Label htmlFor="password">Password</Label>
-                          <Input id="password" type="password" value={wifiConfig.password} onChange={(e) => setWifiConfig({...wifiConfig, password: e.target.value})} placeholder="Enter password" />
+                          <Input id="password" type="password" value={wifiConfig.password} onChange={(e) => setWifiConfig({ ...wifiConfig, password: e.target.value })} placeholder="Enter password" />
                         </div>
                       </div>
                       <DialogFooter>
@@ -329,10 +349,10 @@ ip route 0.0.0.0 0.0.0.0 dhcp`;
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-medium text-gray-700">Live Test Results</h4>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-8 text-xs text-blue-600" 
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 text-xs text-blue-600"
                   onClick={handleRunTests}
                   disabled={isRunningTests}
                 >
@@ -340,7 +360,7 @@ ip route 0.0.0.0 0.0.0.0 dhcp`;
                   {isRunningTests ? "Running..." : "Run All Tests"}
                 </Button>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 border rounded-lg">
                   <div className="text-xs text-gray-500 mb-1">Latency (Ping)</div>

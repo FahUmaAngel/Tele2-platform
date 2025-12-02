@@ -31,11 +31,21 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
 
 import rackImg from '@/assets/rack_installation.jpg';
 import cablingImg from '@/assets/cabling_setup.jpg';
 
 export default function WorkExecution({ siteId }) {
+  // Fetch installation data
+  const { data: installationData } = useQuery({
+    queryKey: ['naas-installation', siteId],
+    queryFn: () => base44.entities.NaasInstallationData.list(),
+    select: (data) => data.find(d => d.facility_id === siteId),
+  });
+
+  const checklistProgress = installationData?.checklist_completion || 0;
   const [checklistItems, setChecklistItems] = React.useState([
     { id: 1, label: "Equipment received and verified against BOM", checked: true, description: "Check all serial numbers against the delivery note." },
     { id: 2, label: "Rack mounting completed according to design", checked: true, description: "Ensure 1U spacing between active equipment." },
@@ -51,7 +61,7 @@ export default function WorkExecution({ siteId }) {
     ));
   };
 
-  const progress = (checklistItems.filter(i => i.checked).length / checklistItems.length) * 100;
+  const progress = checklistProgress;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
