@@ -24,11 +24,6 @@ export default function NaasPreDesign() {
   const [generatedDraft, setGeneratedDraft] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [replanNeeded, setReplanNeeded] = useState(false);
-
-  // Mock logic for replanNeeded - in real app, check status or dates
-  useEffect(() => {
-    // Example: setReplanNeeded(true) if status is 'Delayed'
-  }, []);
   const [pageFilters, setPageFilters] = useState({});
 
   // Sync page filters when facility_id or order_id is selected
@@ -80,6 +75,13 @@ export default function NaasPreDesign() {
     }
   });
 
+  // Load existing draft from preDesign data
+  useEffect(() => {
+    if (preDesign?.draft_bom) {
+      setGeneratedDraft(preDesign.draft_bom);
+    }
+  }, [preDesign]);
+
   // 2. Mutations
   const saveMutation = useMutation({
     mutationFn: async (data) => {
@@ -105,11 +107,11 @@ export default function NaasPreDesign() {
   const handleGenerateAI = async (params) => {
     setIsGenerating(true);
     // Simulate AI Delay
-    setTimeout(() => {
-      const mockBOM = params.site_category === 'Small' ? [
+    setTimeout(async () => {
+      const mockBOM = params.category === 'Small' ? [
         { name: "Cisco Meraki MX68", qty: 1, cost: 8500 },
         { name: "Cisco Meraki MR44 WiFi 6", qty: 2, cost: 4200 }
-      ] : params.site_category === 'Medium' ? [
+      ] : params.category === 'Medium' ? [
         { name: "Cisco Catalyst 9200L 24P", qty: 1, cost: 15000 },
         { name: "Cisco Catalyst 9115AX AP", qty: 4, cost: 3500 },
         { name: "UPS 1500VA", qty: 1, cost: 2500 }
@@ -119,18 +121,47 @@ export default function NaasPreDesign() {
         { name: "Fiber Uplink Module 10G", qty: 2, cost: 8000 }
       ];
 
-      setGeneratedDraft({
+      const draft = {
         site_category: params.category,
         location_type: params.locationType,
         bom: mockBOM
-      });
+      };
+
+      setGeneratedDraft(draft);
+
+      // Save draft to database immediately
+      try {
+        const payload = {
+          facility_id: siteId,
+          order_id: fiberOrder?.order_id || orderIdParam,
+          site_category: params.category,
+          location_type: params.locationType,
+          draft_bom: draft
+        };
+
+        if (preDesign?.id) {
+          await base44.entities.NaasPreDesign.update(preDesign.id, payload);
+        } else {
+          await base44.entities.NaasPreDesign.create(payload);
+        }
+
+        queryClient.invalidateQueries(['naasPreDesign', siteId]);
+        toast.success("Draft design generated and saved.");
+      } catch (error) {
+        toast.error("Failed to save draft.");
+      }
+
       setIsGenerating(false);
-      toast.success("Draft design generated.");
     }, 2000);
   };
 
   const onSubmit = (data) => {
-    saveMutation.mutate(data);
+    // Include the current draft when saving parameters
+    const payload = {
+      ...data,
+      draft_bom: generatedDraft
+    };
+    saveMutation.mutate(payload);
   };
 
   if (isLoading) return <div className="p-8">Loading...</div>;

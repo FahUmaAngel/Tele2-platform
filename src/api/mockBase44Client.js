@@ -53,7 +53,7 @@ const loadStore = () => {
             'ai_insights',
             'approval_history'
         ]),
-        NaasPreDesign: parseCsv(naasPreDesignCsv),
+        NaasPreDesign: processEntityData(parseCsv(naasPreDesignCsv), ['draft_bom']),
         SiteSurvey: parseCsv(siteSurveyCsv),
         Supplier: parseCsv(supplierCsv),
         Subcontractor: parseCsv(subcontractorCsv),
