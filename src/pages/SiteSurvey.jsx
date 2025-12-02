@@ -11,6 +11,7 @@ import WorkflowTimeline from '@/components/shared/WorkflowTimeline';
 import PageFilter from '@/components/shared/PageFilter';
 import ReplanButton from '@/components/ReplanButton';
 import CreateSurveyDialog from "@/components/site-survey/CreateSurveyDialog";
+import EditSurveyDialog from "@/components/site-survey/EditSurveyDialog";
 
 export default function SiteSurvey() {
   const [searchParams] = useSearchParams();
@@ -18,6 +19,7 @@ export default function SiteSurvey() {
   const orderId = searchParams.get("orderId") || "";
 
   const [isNewSurveyOpen, setIsNewSurveyOpen] = useState(false);
+  const [editingSurvey, setEditingSurvey] = useState(null);
   const [replanNeeded, setReplanNeeded] = useState(false);
 
   // Mocking data since we might not have records yet, but using entity structure
@@ -109,7 +111,10 @@ export default function SiteSurvey() {
         )}
 
         {filteredSurveys.map((survey) => (
-          <SurveyCard key={survey.id} survey={survey} />
+          <SurveyCard
+            key={survey.id}
+            survey={{ ...survey, onEdit: setEditingSurvey }}
+          />
         ))}
       </div>
 
@@ -118,6 +123,12 @@ export default function SiteSurvey() {
         onOpenChange={setIsNewSurveyOpen}
         siteId={siteId}
         orderId={orderId}
+      />
+
+      <EditSurveyDialog
+        open={!!editingSurvey}
+        onOpenChange={(open) => !open && setEditingSurvey(null)}
+        survey={editingSurvey}
       />
     </div>
   );

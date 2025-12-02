@@ -188,6 +188,16 @@ export default function SurveyCard({ survey }) {
 
                   {/* Actions Footer */}
                   <div className="flex gap-2 pt-2">
+                    <Button
+                      variant="outline"
+                      className="flex-1 h-8 text-xs border-blue-200 text-blue-700 hover:bg-blue-50"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        survey.onEdit?.(survey);
+                      }}
+                    >
+                      <PenTool className="w-3 h-3 mr-2" /> Edit
+                    </Button>
                     <Link
                       to={`${createPageUrl('DesignCustomer')}?siteId=${survey.facility_id}&orderId=${survey.order_id || order?.order_id}`}
                       className="flex-1"
