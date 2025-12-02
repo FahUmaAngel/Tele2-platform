@@ -106,10 +106,10 @@ export default function NaasPreDesign() {
     setIsGenerating(true);
     // Simulate AI Delay
     setTimeout(() => {
-      const mockBOM = params.site_category === 'Small' ? [
+      const mockBOM = (params.site_category === 'Small' || params.site_category === 'Express') ? [
         { name: "Cisco Meraki MX68", qty: 1, cost: 8500 },
         { name: "Cisco Meraki MR44 WiFi 6", qty: 2, cost: 4200 }
-      ] : params.site_category === 'Medium' ? [
+      ] : (params.site_category === 'Medium' || params.site_category === 'Standard') ? [
         { name: "Cisco Catalyst 9200L 24P", qty: 1, cost: 15000 },
         { name: "Cisco Catalyst 9115AX AP", qty: 4, cost: 3500 },
         { name: "UPS 1500VA", qty: 1, cost: 2500 }
