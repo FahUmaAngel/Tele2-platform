@@ -164,21 +164,12 @@ export default function SurveyCard({ survey }) {
 
   const handleDownloadPDF = (e) => {
     if (e) e.stopPropagation();
-
     try {
       const doc = generatePDFDoc();
-      const filename = `Survey_${survey.facility_id}_${new Date().toISOString().split('T')[0]}.pdf`;
-
-      // Generate PDF as blob
-      const pdfBlob = doc.output('blob');
-
-      // Use FileSaver.js to download with proper filename
-      saveAs(pdfBlob, filename);
-
-      console.log('PDF download initiated with FileSaver:', filename);
+      doc.save(`Survey_${survey.facility_id}_${new Date().toISOString().split('T')[0]}.pdf`);
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF. Please try again.');
+      console.error('Error:', error);
+      alert('Failed to generate PDF');
     }
   };
 
