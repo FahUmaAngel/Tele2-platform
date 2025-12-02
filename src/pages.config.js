@@ -1,5 +1,6 @@
 import { lazy } from 'react';
 import Home from './pages/Home';
+import Login from './pages/Login';
 import FiberOrdering from './pages/FiberOrdering';
 import UserManagement from './pages/UserManagement';
 import Supplier from './pages/Supplier';
@@ -21,9 +22,9 @@ import SiteProgressV2 from './pages/SiteProgressV2';
 import DataViewer from './pages/DataViewer';
 import __Layout from './Layout.jsx';
 
-
 export const PAGES = {
     "Home": Home,
+    "Login": Login,
     "FiberOrdering": FiberOrdering,
     "UserManagement": UserManagement,
     "Supplier": Supplier,
@@ -43,7 +44,7 @@ export const PAGES = {
     "SiteOverview": SiteOverview,
     "SiteProgress": SiteProgressV2,
     "DataViewer": DataViewer,
-}
+};
 
 export const pagesConfig = {
     mainPage: "Home",

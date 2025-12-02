@@ -21,12 +21,16 @@ export default function DesignCustomer() {
     const urlParams = new URLSearchParams(window.location.search);
     const siteId = urlParams.get("siteId") || "SITE-SE-01";
     const orderIdParam = urlParams.get("orderId");
+
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [isSaving, setIsSaving] = useState(false);
     const [isAiDrawerOpen, setIsAiDrawerOpen] = useState(false);
     const [replanNeeded, setReplanNeeded] = useState(false);
     const [pageFilters, setPageFilters] = useState({});
+
+    // Local State for Design (to allow editing before save)
+    const [localDesign, setLocalDesign] = useState(null);
 
     useEffect(() => {
         const fid = pageFilters.facility_id;
@@ -104,9 +108,6 @@ export default function DesignCustomer() {
             setReplanNeeded(needsReplan);
         }
     }, [designData]);
-
-    // Local State for Design (to allow editing before save)
-    const [localDesign, setLocalDesign] = useState(null);
 
     useEffect(() => {
         if (designData) {
@@ -311,6 +312,11 @@ export default function DesignCustomer() {
                             {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                             Save & Update
                         </Button>
+                        <Link to={`${createPageUrl('OrderProcessing')}?siteId=${siteId}${orderIdParam ? `&orderId=${orderIdParam}` : ''}`}>
+                            <Button className="bg-[#0a1f33] hover:bg-[#153250]">
+                                Proceed to Order Processing <ArrowRight className="w-4 h-4 ml-2" />
+                            </Button>
+                        </Link>
                     </div>
                 </div>
             </div>

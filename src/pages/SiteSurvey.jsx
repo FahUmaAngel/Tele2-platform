@@ -3,8 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { FileText } from "lucide-react";
-import { useNavigate } from 'react-router-dom';
+import { FileText, ArrowRight } from "lucide-react";
+import { useNavigate, Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import SurveyCard from "@/components/site-survey/SurveyCard";
 import WorkflowTimeline from '@/components/shared/WorkflowTimeline';
@@ -80,6 +80,11 @@ export default function SiteSurvey() {
             {replanNeeded ? "Replanning Required" : "AI Replan"}
           </ReplanButton>
           <Button className="bg-[#0a1f33]" onClick={() => setIsNewSurveyOpen(true)}>New Survey</Button>
+          <Link to={`${createPageUrl('DesignCustomer')}?siteId=${siteId}${orderId ? `&orderId=${orderId}` : ''}`}>
+            <Button variant="outline" className="border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100">
+              Proceed to Design <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </Link>
         </div>
       </div>
 
