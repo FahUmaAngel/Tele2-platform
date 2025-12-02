@@ -21,9 +21,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { jsPDF } from 'jspdf';
+import { saveAs } from 'file-saver';
+import PDFPreviewDialog from './PDFPreviewDialog';
 
 export default function SurveyCard({ survey }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showPDFPreview, setShowPDFPreview] = useState(false);
 
   const { data: order } = useQuery({
     queryKey: ['fiber-order-client', survey.facility_id],
@@ -53,6 +57,134 @@ export default function SurveyCard({ survey }) {
     if (confirm("Mark survey as completed?")) {
       updateSurveyMutation.mutate({ id: survey.id, status: 'Completed' });
     }
+  };
+
+  const generatePDFDoc = () => {
+    // Create new PDF document
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let yPosition = 20;
+
+    // Header
+    doc.setFontSize(20);
+    doc.setFont(undefined, 'bold');
+    doc.text('Site Survey Report', pageWidth / 2, yPosition, { align: 'center' });
+
+    yPosition += 15;
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(100);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth / 2, yPosition, { align: 'center' });
+
+    // Line separator
+    yPosition += 10;
+    doc.setDrawColor(200);
+    doc.line(20, yPosition, pageWidth - 20, yPosition);
+
+    // Survey IDs
+    yPosition += 10;
+    doc.setFontSize(12);
+    doc.setTextColor(0);
+    doc.setFont(undefined, 'bold');
+    doc.text('Survey Information', 20, yPosition);
+
+    yPosition += 8;
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text(`Facility ID: ${survey.facility_id || 'N/A'}`, 20, yPosition);
+
+    if (survey.order_id) {
+      yPosition += 6;
+      doc.text(`Order ID: ${survey.order_id}`, 20, yPosition);
+    }
+
+    // Client Information
+    yPosition += 12;
+    doc.setFont(undefined, 'bold');
+    doc.text('Client Information', 20, yPosition);
+
+    yPosition += 8;
+    doc.setFont(undefined, 'normal');
+    doc.text(`Client: ${order?.client || survey.client || 'N/A'}`, 20, yPosition);
+
+    yPosition += 6;
+    const address = survey.address || order?.address || 'N/A';
+    doc.text(`Address: ${address}`, 20, yPosition);
+
+    // Survey Details
+    yPosition += 12;
+    doc.setFont(undefined, 'bold');
+    doc.text('Survey Details', 20, yPosition);
+
+    yPosition += 8;
+    doc.setFont(undefined, 'normal');
+    doc.text(`Surveyor: ${survey.surveyor || 'N/A'}`, 20, yPosition);
+
+    yPosition += 6;
+    doc.text(`Survey Date: ${survey.date || 'N/A'}`, 20, yPosition);
+
+    yPosition += 6;
+    doc.text(`Feasibility: ${survey.feasibility || 'N/A'}`, 20, yPosition);
+
+    yPosition += 6;
+    doc.text(`Installation Type: ${survey.installation_type || 'N/A'}`, 20, yPosition);
+
+    // Requirements
+    yPosition += 12;
+    doc.setFont(undefined, 'bold');
+    doc.text('Special Requirements', 20, yPosition);
+
+    yPosition += 8;
+    doc.setFont(undefined, 'normal');
+    doc.text(`Special Hardware: ${survey.requires_special_hardware ? 'Yes' : 'No'}`, 20, yPosition);
+
+    yPosition += 6;
+    doc.text(`Lift Required: ${survey.requires_lift ? 'Yes' : 'No'}`, 20, yPosition);
+
+    // Notes
+    if (survey.notes) {
+      yPosition += 12;
+      doc.setFont(undefined, 'bold');
+      doc.text('Surveyor Notes', 20, yPosition);
+
+      yPosition += 8;
+      doc.setFont(undefined, 'normal');
+      const splitNotes = doc.splitTextToSize(survey.notes, pageWidth - 40);
+      doc.text(splitNotes, 20, yPosition);
+    }
+
+    // Footer
+    const footerY = doc.internal.pageSize.getHeight() - 15;
+    doc.setFontSize(8);
+    doc.setTextColor(150);
+    doc.text('Tele2 Site Survey Report - Confidential', pageWidth / 2, footerY, { align: 'center' });
+
+    return doc;
+  };
+
+  const handleDownloadPDF = (e) => {
+    if (e) e.stopPropagation();
+
+    try {
+      const doc = generatePDFDoc();
+      const filename = `Survey_${survey.facility_id}_${new Date().toISOString().split('T')[0]}.pdf`;
+
+      // Generate PDF as blob
+      const pdfBlob = doc.output('blob');
+
+      // Use FileSaver.js to download with proper filename
+      saveAs(pdfBlob, filename);
+
+      console.log('PDF download initiated with FileSaver:', filename);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. Please try again.');
+    }
+  };
+
+  const handleShowPreview = (e) => {
+    e.stopPropagation();
+    setShowPDFPreview(true);
   };
 
   const toggleExpand = () => setIsExpanded(!isExpanded);
@@ -215,7 +347,11 @@ export default function SurveyCard({ survey }) {
                         <CheckCircle className="w-3 h-3 mr-2" /> Complete
                       </Button>
                     )}
-                    <Button variant="outline" className="flex-1 h-8 text-xs">
+                    <Button
+                      variant="outline"
+                      className="flex-1 h-8 text-xs"
+                      onClick={handleShowPreview}
+                    >
                       <Download className="w-3 h-3 mr-2" /> PDF Report
                     </Button>
                   </div>
@@ -226,6 +362,15 @@ export default function SurveyCard({ survey }) {
           </AnimatePresence>
         </CardContent>
       </Card>
+
+      <PDFPreviewDialog
+        open={showPDFPreview}
+        onOpenChange={setShowPDFPreview}
+        survey={survey}
+        order={order}
+        onExport={handleDownloadPDF}
+        onEdit={() => survey.onEdit?.(survey)}
+      />
     </motion.div >
   );
 }

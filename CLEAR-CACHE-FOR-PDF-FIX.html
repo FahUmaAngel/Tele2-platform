@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Clear Browser Cache - Tele2 Platform</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #0a1f33;
+        }
+
+        .step {
+            background: #f0f7ff;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #0066cc;
+        }
+
+        .important {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+            font-weight: bold;
+        }
+
+        code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔄 Clear Browser Cache for PDF Export Fix</h1>
+
+        <p>The PDF export code has been updated, but your browser is caching the old JavaScript. Follow these steps to
+            clear the cache:</p>
+
+        <h2>Method 1: Hard Refresh (Recommended)</h2>
+        <div class="step important">
+            <strong>Windows/Linux:</strong> Press <code>Ctrl + Shift + R</code> or <code>Ctrl + F5</code>
+        </div>
+        <div class="step important">
+            <strong>Mac:</strong> Press <code>Cmd + Shift + R</code>
+        </div>
+
+        <h2>Method 2: Clear Cache Manually</h2>
+        <div class="step">
+            1. Press <code>F12</code> to open Developer Tools
+        </div>
+        <div class="step">
+            2. Right-click the refresh button in the browser
+        </div>
+        <div class="step">
+            3. Select "Empty Cache and Hard Reload"
+        </div>
+
+        <h2>Method 3: Clear All Cache</h2>
+        <div class="step">
+            1. Press <code>Ctrl + Shift + Delete</code>
+        </div>
+        <div class="step">
+            2. Select "Cached images and files"
+        </div>
+        <div class="step">
+            3. Click "Clear data"
+        </div>
+        <div class="step">
+            4. Refresh the page with <code>F5</code>
+        </div>
+
+        <h2>After Clearing Cache:</h2>
+        <div class="step">
+            1. Navigate to <code>http://localhost:5174/site-survey</code>
+        </div>
+        <div class="step">
+            2. Expand a survey card
+        </div>
+        <div class="step">
+            3. Click "PDF Report"
+        </div>
+        <div class="step">
+            4. Click "Export PDF"
+        </div>
+        <div class="step important">
+            ✅ The file should now download as <code>Survey_SITE-SE-XX_2025-12-02.pdf</code>
+        </div>
+
+        <h2>What Was Fixed:</h2>
+        <ul>
+            <li>✅ PDF now generates using arraybuffer</li>
+            <li>✅ Blob created with explicit <code>application/pdf</code> MIME type</li>
+            <li>✅ Download link has proper filename attribute</li>
+            <li>✅ Proper cleanup to prevent memory leaks</li>
+        </ul>
+    </div>
+</body>
+
+</html>
