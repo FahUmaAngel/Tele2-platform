@@ -3,8 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { FileText } from "lucide-react";
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { FileText, ArrowRight } from "lucide-react";
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import SurveyCard from "@/components/site-survey/SurveyCard";
 import WorkflowTimeline from '@/components/shared/WorkflowTimeline';
@@ -21,10 +21,12 @@ export default function SiteSurvey() {
   const [replanNeeded, setReplanNeeded] = useState(false);
 
   // Mocking data since we might not have records yet, but using entity structure
-  const { data: surveys } = useQuery({
+  const { data: surveys, isLoading } = useQuery({
     queryKey: ['site-surveys'],
     queryFn: () => base44.entities.SiteSurvey.list()
   });
+
+
 
   // Check for replan conditions (e.g. survey rejected or significant issues)
   useEffect(() => {
@@ -59,6 +61,8 @@ export default function SiteSurvey() {
     }
     return true;
   }) || [];
+
+
 
   return (
     <div className="space-y-8">
