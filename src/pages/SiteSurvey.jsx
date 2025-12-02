@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { FileText, ArrowRight } from "lucide-react";
-import { useNavigate, Link } from 'react-router-dom';
+import { FileText } from "lucide-react";
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import SurveyCard from "@/components/site-survey/SurveyCard";
 import WorkflowTimeline from '@/components/shared/WorkflowTimeline';
@@ -13,9 +13,9 @@ import ReplanButton from '@/components/ReplanButton';
 import CreateSurveyDialog from "@/components/site-survey/CreateSurveyDialog";
 
 export default function SiteSurvey() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const siteId = urlParams.get("siteId") || "";
-  const orderId = urlParams.get("orderId") || "";
+  const [searchParams] = useSearchParams();
+  const siteId = searchParams.get("siteId") || "";
+  const orderId = searchParams.get("orderId") || "";
 
   const [isNewSurveyOpen, setIsNewSurveyOpen] = useState(false);
   const [replanNeeded, setReplanNeeded] = useState(false);

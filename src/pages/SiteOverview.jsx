@@ -35,7 +35,7 @@ export default function SiteOverview() {
       location: order.address || 'Unknown',
       category: order.category || 'Fiber',
       priority: order.priority || 3,
-      deliveryEst: order.delivery_date || 'TBD',
+      deliveryEst: order.delivery_est_date || 'TBD',
       subcontractor: order.subcontractor || 'None',
       status: order.status
     }));

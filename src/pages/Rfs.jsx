@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import {
@@ -15,7 +15,7 @@ import {
   AlertTriangle,
   ChevronRight
 } from "lucide-react";
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -41,12 +41,12 @@ import { detectAcceptanceIssues } from '@/utils/RfsAIDetection';
 import RfsReplanningModal from '@/components/rfs/RfsReplanningModal';
 
 export default function Rfs() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const siteId = urlParams.get("siteId") || "SITE-SE-01";
-  const orderId = urlParams.get("orderId");
+  const [searchParams] = useSearchParams();
+  const siteId = searchParams.get("siteId") || "SITE-SE-01";
+  const orderId = searchParams.get("orderId");
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const tabParam = urlParams.get("tab");
+  const tabParam = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState(tabParam || "health");
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
   const [pageFilters, setPageFilters] = React.useState({ facility_id: '', order_id: '' });
@@ -295,7 +295,7 @@ export default function Rfs() {
               </h1>
               <div className="flex items-center gap-3 mt-2">
                 <span className="px-2 py-1 bg-gray-100 rounded text-xs font-medium text-gray-600">
-                  Facility ID: {siteId} • Order ID: {orderId || "N/A"}
+                  Facility ID: {siteId} â€¢ Order ID: {orderId || "N/A"}
                 </span>
                 <span className="w-1 h-1 bg-gray-300 rounded-full" />
                 <span className="text-sm text-gray-500">{fiberOrder?.client || "Client N/A"}</span>
@@ -418,6 +418,8 @@ export default function Rfs() {
                 status={rfsReport?.invoice_status}
                 onGenerateInvoice={handleGenerateInvoice}
                 rfsReady={!!rfsReport?.customer_signature}
+                fiberOrder={fiberOrder}
+                rfsReport={rfsReport}
               />
 
               <div className="space-y-6">
@@ -463,9 +465,9 @@ export default function Rfs() {
               <DialogDescription className="pt-2">
                 The site <strong>{siteId}</strong> is now officially live and marked as Ready For Service.
                 <br /><br />
-                • Operations team notified<br />
-                • Billing cycle activated<br />
-                • Warranty period started
+                â€¢ Operations team notified<br />
+                â€¢ Billing cycle activated<br />
+                â€¢ Warranty period started
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>

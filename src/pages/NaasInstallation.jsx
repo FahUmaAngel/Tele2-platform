@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import {
   ChevronRight,
   ArrowLeft,
@@ -9,7 +9,7 @@ import {
   Clock
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Separator } from "@/components/ui/separator";
 import {
@@ -36,9 +36,9 @@ import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 
 export default function NaasInstallation() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const siteId = urlParams.get("siteId") || "SITE-SE-01"; // Default if missing
-  const orderId = urlParams.get("orderId");
+  const [searchParams] = useSearchParams();
+  const siteId = searchParams.get("siteId") || "SITE-SE-01"; // Default if missing
+  const orderId = searchParams.get("orderId");
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = React.useState(false);
   const [isTimelineOpen, setIsTimelineOpen] = useState(false);
@@ -169,7 +169,7 @@ export default function NaasInstallation() {
     <div className="space-y-8 pb-20">
       <PageFilter onFilterChange={setPageFilters} defaultFilters={{ facility_id: siteId, order_id: orderId }} />
 
-      {/* SECTION 1 — Header */}
+      {/* SECTION 1 â€” Header */}
       <div className="flex flex-col gap-4">
         {/* Breadcrumbs */}
         <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -195,7 +195,7 @@ export default function NaasInstallation() {
             </h1>
             <div className="flex items-center gap-3 mt-2">
               <span className="px-2 py-1 bg-gray-100 rounded text-xs font-medium text-gray-600">
-                Facility ID: {siteId} • Order ID: {orderId || "N/A"}
+                Facility ID: {siteId} â€¢ Order ID: {orderId || "N/A"}
               </span>
               <span className="w-1 h-1 bg-gray-300 rounded-full" />
               <span className="text-sm text-gray-500">Retail / Enterprise</span>
@@ -235,24 +235,24 @@ export default function NaasInstallation() {
       {/* Workflow Timeline */}
       <WorkflowTimeline currentStep={6} />
 
-      {/* SECTION 2 — Overview & Status */}
+      {/* SECTION 2 â€” Overview & Status */}
       <InstallationOverview siteId={siteId} orderId={orderId} />
 
       <Separator className="my-6" />
 
-      {/* SECTION 3 & 4 — Resources & Scheduling */}
+      {/* SECTION 3 & 4 â€” Resources & Scheduling */}
       <div className="space-y-4">
         <h2 className="text-lg font-semibold text-gray-900">Resource & Scheduling</h2>
         <ResourceManagement siteId={siteId} />
       </div>
 
-      {/* SECTION 5 & 6 — Execution & Evidence */}
+      {/* SECTION 5 & 6 â€” Execution & Evidence */}
       <div className="space-y-4">
         <h2 className="text-lg font-semibold text-gray-900">Work Execution</h2>
         <WorkExecution siteId={siteId} />
       </div>
 
-      {/* SECTION 7 & 8 — Technical Configuration */}
+      {/* SECTION 7 & 8 â€” Technical Configuration */}
       <div className="space-y-4">
         <h2 className="text-lg font-semibold text-gray-900">Technical Configuration & Activation</h2>
         <TechnicalConfig siteId={siteId} />
@@ -373,7 +373,7 @@ export default function NaasInstallation() {
         </DialogContent>
       </Dialog>
 
-      {/* SECTION 9 — Completion Panel */}
+      {/* SECTION 9 â€” Completion Panel */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 lg:pl-80 z-40 flex items-center justify-between shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
         <div className="flex items-center gap-4">
           <div className="hidden md:block">
