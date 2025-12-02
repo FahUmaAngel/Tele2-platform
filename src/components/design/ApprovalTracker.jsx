@@ -36,9 +36,9 @@ export default function ApprovalTracker({ design, onStatusChange }) {
                <History className="w-5 h-5 text-gray-600" />
                Approval Status
            </div>
-           <Badge variant="outline" className={`${getStatusColor(design.status)} flex items-center gap-1`}>
+           <Badge variant="outline" className={`${getStatusColor(design.status || '')} flex items-center gap-1`}>
                {getStatusIcon(design.status)}
-               {design.status.replace('_', ' ').toUpperCase()}
+               {design.status?.replace('_', ' ').toUpperCase() || 'UNKNOWN'}
            </Badge>
         </CardTitle>
       </CardHeader>
@@ -46,14 +46,21 @@ export default function ApprovalTracker({ design, onStatusChange }) {
         
         {/* Timeline / History */}
         <div className="relative border-l border-gray-200 ml-2 space-y-6 pl-6 py-2">
-            {design.approval_history?.map((event, i) => (
+            {Array.isArray(design.approval_history) && design.approval_history.map((event, i) => {
+                let dateStr = 'Invalid Date';
+                try {
+                    dateStr = format(new Date(event.date), 'MMM d, HH:mm');
+                } catch (e) {
+                    // Fallback
+                }
+                return (
                 <div key={i} className="relative">
                     <div className="absolute -left-[29px] bg-white p-1 rounded-full border border-gray-200">
                         <div className="w-2 h-2 rounded-full bg-blue-500" />
                     </div>
                     <div className="flex flex-col">
                         <span className="text-xs font-semibold text-gray-900">{event.action}</span>
-                        <span className="text-xs text-gray-500">{format(new Date(event.date), 'MMM d, HH:mm')} • {event.user}</span>
+                        <span className="text-xs text-gray-500">{dateStr} • {event.user}</span>
                         {event.comments && (
                             <p className="mt-1 text-xs bg-gray-50 p-2 rounded text-gray-600 border">
                                 "{event.comments}"
@@ -61,8 +68,8 @@ export default function ApprovalTracker({ design, onStatusChange }) {
                         )}
                     </div>
                 </div>
-            ))}
-            {(!design.approval_history || design.approval_history.length === 0) && (
+            )})}
+            {(!Array.isArray(design.approval_history) || design.approval_history.length === 0) && (
                  <div className="text-xs text-gray-400 italic">No history yet. Design is in Draft.</div>
             )}
         </div>
