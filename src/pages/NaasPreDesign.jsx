@@ -120,7 +120,7 @@ export default function NaasPreDesign() {
       ];
 
       setGeneratedDraft({
-        site_category: params.category,
+        site_category: params.site_category,
         location_type: params.locationType,
         bom: mockBOM
       });

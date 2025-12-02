@@ -37,12 +37,18 @@ const inferLocationType = (fiberOrder) => {
 };
 
 export default function PreDesignForm({ initialData, fiberOrder, orderId: filterOrderId, onSubmit, isGenerating, onGenerateAI }) {
+  // Calculate default values from props
+  const targetOrderId = filterOrderId || initialData?.order_id || fiberOrder?.order_id || "";
+  const defaultCategory = initialData?.site_category || fiberOrder?.category || "Medium";
+  const defaultLocationType = initialData?.location_type || inferLocationType(fiberOrder) || "Office";
+  const defaultRequirements = initialData?.customer_requirements || fiberOrder?.requirements || "";
+
   const { register, handleSubmit, setValue, watch, reset } = useForm({
     defaultValues: {
-      site_category: "Medium",
-      location_type: "Office",
-      customer_requirements: "",
-      order_id: filterOrderId || ""
+      site_category: defaultCategory,
+      location_type: defaultLocationType,
+      customer_requirements: defaultRequirements,
+      order_id: targetOrderId
     }
   });
 
@@ -54,10 +60,12 @@ export default function PreDesignForm({ initialData, fiberOrder, orderId: filter
 
   // Update form when initialData changes or fiberOrder loads
   React.useEffect(() => {
+    console.log('[PreDesignForm] useEffect triggered', { initialData, fiberOrder, filterOrderId });
     const targetOrderId = filterOrderId || initialData?.order_id || fiberOrder?.order_id || "";
 
     // Prioritize initialData if it exists (user has already saved preferences)
     if (initialData) {
+      console.log('[PreDesignForm] Populating from initialData', initialData);
       reset({
         site_category: initialData.site_category || "Medium",
         location_type: initialData.location_type || inferLocationType(fiberOrder),
@@ -66,6 +74,7 @@ export default function PreDesignForm({ initialData, fiberOrder, orderId: filter
       });
     } else if (fiberOrder) {
       // Auto-populate from fiberOrder data
+      console.log('[PreDesignForm] Populating from fiberOrder', fiberOrder);
       reset({
         site_category: fiberOrder.category || "Medium",
         location_type: inferLocationType(fiberOrder),
@@ -73,12 +82,13 @@ export default function PreDesignForm({ initialData, fiberOrder, orderId: filter
         order_id: targetOrderId
       });
     } else if (filterOrderId) {
+      console.log('[PreDesignForm] Setting order_id only', filterOrderId);
       setValue("order_id", filterOrderId);
     }
   }, [initialData, fiberOrder, filterOrderId, reset, setValue]);
 
   const handleAI = () => {
-    onGenerateAI({ category, locationType });
+    onGenerateAI({ site_category: category, locationType });
   };
 
   return (
@@ -112,7 +122,9 @@ export default function PreDesignForm({ initialData, fiberOrder, orderId: filter
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Small">Small (Home/SoHo)</SelectItem>
+                <SelectItem value="Standard">Standard</SelectItem>
                 <SelectItem value="Medium">Medium (Branch/Retail)</SelectItem>
+                <SelectItem value="Express">Express</SelectItem>
                 <SelectItem value="Large">Large (HQ/Campus)</SelectItem>
                 <SelectItem value="VIP">VIP (Critical Infra)</SelectItem>
               </SelectContent>
