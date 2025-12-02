@@ -55,29 +55,28 @@ export default function FiberOrdersTable({ orders, onSelectOrder }) {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                     <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-600">
-                        {order.subcontractor?.charAt(0) || "U"}
-                     </div>
-                     <span className="text-xs font-medium text-gray-700 truncate max-w-[100px]">{order.subcontractor || "Unassigned"}</span>
+                    <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-600">
+                      {order.subcontractor?.charAt(0) || "U"}
+                    </div>
+                    <span className="text-xs font-medium text-gray-700 truncate max-w-[100px]">{order.subcontractor || "Unassigned"}</span>
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${
-                    order.priority === 1 ? 'bg-red-50 text-red-700 border-red-200' : 
-                    order.priority <= 3 ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-50 text-gray-700'
-                  }`}>
+                  <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${order.priority === 1 ? 'bg-red-50 text-red-700 border-red-200' :
+                      order.priority <= 3 ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-50 text-gray-700'
+                    }`}>
                     {order.priority}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-xs">
-                    {order.delivery_est_date || "-"}
+                  {order.delivery_est_date || "-"}
                 </TableCell>
                 <TableCell className="text-xs">
-                    {order.delivery_conf_date ? (
-                        <span className="text-green-700 font-medium">{order.delivery_conf_date}</span>
-                    ) : (
-                        <span className="text-gray-400 italic">Pending</span>
-                    )}
+                  {order.delivery_conf_date ? (
+                    <span className="text-green-700 font-medium">{order.delivery_conf_date}</span>
+                  ) : (
+                    <span className="text-gray-400 italic">Pending</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium capitalize ${getStatusColor(order.status)}`}>
@@ -86,9 +85,9 @@ export default function FiberOrdersTable({ orders, onSelectOrder }) {
                   </span>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Link 
+                  <Link
                     to={`${createPageUrl('NaasPreDesign')}?siteId=${order.facility_id}&orderId=${order.order_id}`}
-                    onClick={(e) => e.stopPropagation()} 
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <Button variant="ghost" size="icon" className="h-7 w-7">
                       <ArrowRight className="w-3 h-3 text-gray-400" />
