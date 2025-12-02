@@ -246,6 +246,24 @@ export default function SiteProgressV2() {
         <TooltipProvider>
             <div className="p-6 bg-gray-50 min-h-screen font-sans space-y-6">
                 
+                {/* Page Header */}
+                <div className="flex flex-col gap-1 mb-2">
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <span>Dashboard</span>
+                        <ChevronRight className="w-4 h-4" />
+                        <span className="font-medium text-gray-900">Site Progress</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Site Progress</h1>
+                            <p className="text-gray-500 text-sm">Track fiber delivery status and installation phases across all sites.</p>
+                        </div>
+                        <Badge variant="secondary" className="px-3 py-1 text-sm bg-white border border-gray-200 shadow-sm">
+                            {sites.length} Active Sites
+                        </Badge>
+                    </div>
+                </div>
+
                 {/* Top Bar: Filters & View Toggle */}
                 <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm space-y-4 md:space-y-0 md:flex md:items-center md:justify-between gap-4">
                     
