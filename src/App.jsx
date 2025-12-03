@@ -74,7 +74,7 @@ function App() {
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
-        <Router>
+        <Router basename="/Tele2-platform">
           <NavigationTracker />
           <AuthenticatedApp />
         </Router>
