@@ -114,8 +114,9 @@ export default function Analytics() {
 
     // Group orders by time period
     allOrders.forEach(order => {
-      if (!order.created_date) return;
-      const orderDate = new Date(order.created_date);
+      const dateStr = order.delivery_est_date || order.project_start_date || order.created_date;
+      if (!dateStr) return;
+      const orderDate = new Date(dateStr);
       let key;
 
       if (timePeriod === 'daily') {
