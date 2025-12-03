@@ -238,6 +238,34 @@ export default function SiteProgressV2() {
         return { left: `${leftPercent}%`, width: `${widthPercent}%` };
     };
 
+    // Calculate progress bar position based on phase timeline
+    const getProgressPosition = (progress, phases, totalDays) => {
+        if (progress >= 100) return 100;
+        if (progress <= 0) return 0;
+        
+        // Calculate which phase we're in based on progress
+        // Each phase represents an equal portion of the overall progress
+        const phaseIndex = Math.min(
+            phases.length - 1,
+            Math.floor((progress / 100) * phases.length)
+        );
+        
+        // Calculate progress within the current phase (0-1)
+        const phaseProgress = ((progress / 100) * phases.length) % 1;
+        
+        // Calculate cumulative days up to current phase
+        let cumulativeDays = 0;
+        for (let i = 0; i < phaseIndex; i++) {
+            cumulativeDays += phases[i].duration;
+        }
+        
+        // Add progress within current phase
+        const currentPhaseDays = cumulativeDays + (phaseProgress * phases[phaseIndex].duration);
+        
+        // Convert to percentage of total days
+        return (currentPhaseDays / totalDays) * 100;
+    };
+
     // Unique values for filters
     const uniqueFacilities = useMemo(() => [...new Set(fiberOrders?.map(o => o.facility_id) || [])], [fiberOrders]);
     const uniqueStatuses = useMemo(() => [...new Set(fiberOrders?.map(o => o.status || 'Planned') || [])], [fiberOrders]);
@@ -504,7 +532,7 @@ export default function SiteProgressV2() {
                                             {site.progress < 100 && (
                                                 <div 
                                                     className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-30 shadow-[0_0_4px_rgba(59,130,246,0.5)]"
-                                                    style={{ left: `${Math.min(100, Math.max(0, site.progress))}%` }}
+                                                    style={{ left: `${Math.min(100, Math.max(0, getProgressPosition(site.progress, site.phases, site.totalDays)))}%` }}
                                                 />
                                             )}
                                             
@@ -594,7 +622,7 @@ export default function SiteProgressV2() {
                                                         {site.progress < 100 && (
                                                             <div 
                                                                 className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-30 shadow-[0_0_4px_rgba(59,130,246,0.5)]"
-                                                                style={{ left: `${Math.min(100, Math.max(0, site.progress))}%` }}
+                                                                style={{ left: `${Math.min(100, Math.max(0, getProgressPosition(site.progress, site.phases, site.totalDays)))}%` }}
                                                             />
                                                         )}
                                                         
