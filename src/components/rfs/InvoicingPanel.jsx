@@ -19,7 +19,7 @@ export default function InvoicingPanel({ status, onGenerateInvoice, rfsReady, fi
   const getMilestoneStatus = () => {
     const orderExists = !!fiberOrder?.id;
     const hasDeliveryConfirmed = !!fiberOrder?.delivery_conf_date || fiberOrder?.status === 'Delivered' || fiberOrder?.status === 'Confirming';
-    const installationComplete = fiberOrder?.status === 'completed' || fiberOrder?.status === 'installation_scheduled' || fiberOrder?.status === 'Delivered';
+    const installationComplete = fiberOrder?.status === 'Completed' || fiberOrder?.status === 'completed';
     const rfsAccepted = !!rfsReport?.customer_signature;
 
     return [

@@ -28,7 +28,7 @@ export default function CustomerAcceptance({ onSignOff, isSigned, signedData, ac
   };
 
   // ACCEPTED STATE
-  if (acceptanceStatus === 'ACCEPTED' || isSigned) {
+  if (acceptanceStatus === 'ACCEPTED') {
     return (
       <Card className="bg-green-50 border-green-200">
         <CardHeader>

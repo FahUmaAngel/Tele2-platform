@@ -384,7 +384,7 @@ export default function Rfs() {
                   onSignOff={handleSignOff}
                   isSigned={!!rfsReport?.customer_signature}
                   signedData={rfsReport}
-                  acceptanceStatus={fiberOrder?.acceptanceStatus || (rfsReport?.customer_signature ? 'ACCEPTED' : 'PENDING')}
+                  acceptanceStatus={fiberOrder?.acceptanceStatus}
                   customerComplaint={fiberOrder?.customerComplaint}
                 />
               </div>
