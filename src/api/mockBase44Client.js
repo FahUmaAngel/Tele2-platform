@@ -37,7 +37,7 @@ const processEntityData = (data, jsonFields = []) => {
 
 // In-memory store to simulate database, with localStorage persistence
 const loadStore = () => {
-    const saved = localStorage.getItem('tele2_mock_db_v4');
+    const saved = localStorage.getItem('tele2_mock_db_v5');
     if (saved) {
         return JSON.parse(saved);
     }
@@ -68,7 +68,7 @@ const loadStore = () => {
 const store = loadStore();
 
 const saveStore = () => {
-    localStorage.setItem('tele2_mock_db_v4', JSON.stringify(store));
+    localStorage.setItem('tele2_mock_db_v5', JSON.stringify(store));
 };
 
 // Helper to simulate async delay
