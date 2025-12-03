@@ -134,15 +134,18 @@ export default function FiberOrdering() {
 
     // Filter Logic
     const filteredOrders = orders.filter(order => {
-        // 1. Site Context Filter
-        if (siteId && order.facility_id !== siteId) return false;
-
-        // 2. Page Filters
         const f = pageFilters;
-        if (f.facility_id && !order.facility_id?.toLowerCase().includes(f.facility_id.toLowerCase())) return false;
+
+        // Use pageFilters.facility_id if set, otherwise fall back to siteId from URL
+        const activeFacilityFilter = f.facility_id || siteId;
+
+        // Apply facility filter (exact match)
+        if (activeFacilityFilter && order.facility_id !== activeFacilityFilter) return false;
+
+        // Apply other filters
         if (f.order_id && !order.order_id?.toLowerCase().includes(f.order_id.toLowerCase())) return false;
-        if (f.status !== 'all' && order.status !== f.status) return false;
-        if (f.priority !== 'all' && order.priority.toString() !== f.priority) return false;
+        if (f.status && f.status !== 'all' && order.status !== f.status) return false;
+        if (f.priority && f.priority !== 'all' && order.priority.toString() !== f.priority) return false;
 
         if (f.search) {
             const searchLower = f.search.toLowerCase();

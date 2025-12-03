@@ -18,6 +18,7 @@ export default function DataViewer() {
         { id: "designs", label: "Network Designs", fetch: base44.entities.NetworkDesign.list },
         { id: "workOrders", label: "Work Orders", fetch: base44.entities.WorkOrder.list },
         { id: "rfsReports", label: "RFS Reports", fetch: base44.entities.RfsReport.list },
+        { id: "naasInstallation", label: "NaaS Installation", fetch: base44.entities.NaasInstallationData.list },
     ];
 
     const { data, isLoading, refetch, isRefetching } = useQuery({

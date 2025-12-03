@@ -1,0 +1,13 @@
+order_id,facility_id,scheduled_date,scheduled_time_start,scheduled_time_end,device_model,device_serial,device_mac,checklist_completion,wan_active,security_applied,wifi_ssid,wifi_password,config_status,test_latency,test_throughput,test_packet_loss,test_jitter
+ORD-2025-01,SITE-SE-01,2025-06-25,09:00,13:00,Cisco ISR 1100,FGL234910XQ,00:1B:44:11:3A:B7,33,false,false,Tele2-SITE-SE-01,SecurePass123,Pending,14,940,0.0,12
+ORD-2025-02,SITE-SE-02,2025-06-18,10:00,14:00,Cisco Router,FGL234910XR,00:1B:44:11:3A:B8,67,true,true,Tele2-SITE-SE-02,SecurePass456,Applied,12,960,0.0,8
+ORD-2025-03,SITE-SE-03,2025-08-24,08:00,12:00,Cisco Catalyst 9300,FGL234910XS,00:1B:44:11:3A:B9,100,true,true,Tele2-SITE-SE-03,SecurePass789,Applied,10,980,0.0,5
+ORD-2025-04,SITE-SE-04,2025-07-24,14:00,18:00,Media Converter 1000Base-T,FGL234910XT,00:1B:44:11:3A:BA,50,true,false,Tele2-SITE-SE-04,SecurePass101,Pending,15,920,0.1,14
+ORD-2025-05,SITE-SE-05,2025-08-02,09:00,13:00,Cisco ISR 4331,FGL234910XU,00:1B:44:11:3A:BB,17,false,false,Tele2-SITE-SE-05,SecurePass202,Pending,18,900,0.0,16
+ORD-2025-06,SITE-SE-06,2025-08-22,11:00,15:00,HPE Aruba 2930F,FGL234910XV,00:1B:44:11:3A:BC,83,true,true,Tele2-SITE-SE-06,SecurePass303,Applied,11,970,0.0,7
+ORD-2025-07,SITE-SE-07,2025-06-17,09:00,13:00,Juniper SRX300,FGL234910XW,00:1B:44:11:3A:BD,50,true,false,Tele2-SITE-SE-07,SecurePass404,Pending,13,950,0.0,10
+ORD-2025-08,SITE-SE-08,2025-06-27,10:00,14:00,Cisco Catalyst 9200,FGL234910XX,00:1B:44:11:3A:BE,67,true,true,Tele2-SITE-SE-08,SecurePass505,Applied,12,965,0.0,9
+ORD-2025-09,SITE-SE-09,2025-08-25,08:00,12:00,Cisco ISR 1100,FGL234910XY,00:1B:44:11:3A:BF,33,false,false,Tele2-SITE-SE-09,SecurePass606,Pending,16,930,0.0,13
+ORD-2025-10,SITE-SE-10,2025-07-02,13:00,17:00,TP-Link TL-SG3428,FGL234910XZ,00:1B:44:11:3A:C0,50,true,false,Tele2-SITE-SE-10,SecurePass707,Pending,14,945,0.0,11
+ORD-2025-11,SITE-SE-11,2025-07-18,09:00,13:00,Cisco Catalyst 9300,FGL234910YA,00:1B:44:11:3A:C1,17,false,false,Tele2-SITE-SE-11,SecurePass808,Pending,19,890,0.1,17
+ORD-2025-12,SITE-SE-12,2025-06-03,10:00,14:00,Juniper EX4300,FGL234910YB,00:1B:44:11:3A:C2,83,true,true,Tele2-SITE-SE-12,SecurePass909,Applied,10,975,0.0,6
